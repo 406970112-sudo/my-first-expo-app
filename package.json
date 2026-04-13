@@ -1,0 +1,14 @@
+{
+  "name": "my-first-expo-app",
+  "private": true,
+  "workspaces": [
+    "frontend"
+  ],
+  "scripts": {
+    "frontend:start": "npm --prefix frontend run start",
+    "frontend:web": "npm --prefix frontend run web",
+    "frontend:android": "npm --prefix frontend run android",
+    "frontend:ios": "npm --prefix frontend run ios",
+    "frontend:lint": "npm --prefix frontend run lint"
+  }
+}

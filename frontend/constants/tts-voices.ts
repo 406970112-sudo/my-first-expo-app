@@ -1,0 +1,268 @@
+export type VoiceOption = {
+  capabilities: string;
+  group: string;
+  label: string;
+  language: string;
+  value: string;
+};
+
+export const TTS_VOICE_OPTIONS: VoiceOption[] = [
+  {
+    group: '通用场景',
+    label: 'Vivi 2.0',
+    value: 'zh_female_vv_uranus_bigtts',
+    language: '中文、日文、印尼、墨西哥西班牙语',
+    capabilities: '情感变化、指令遵循、ASMR',
+  },
+  {
+    group: '通用场景',
+    label: '小何 2.0',
+    value: 'zh_female_xiaohe_uranus_bigtts',
+    language: '中文',
+    capabilities: '情感变化、指令遵循、ASMR',
+  },
+  {
+    group: '通用场景',
+    label: '云舟 2.0',
+    value: 'zh_male_m191_uranus_bigtts',
+    language: '中文',
+    capabilities: '情感变化、指令遵循、ASMR',
+  },
+  {
+    group: '通用场景',
+    label: '小天 2.0',
+    value: 'zh_male_taocheng_uranus_bigtts',
+    language: '中文',
+    capabilities: '情感变化、指令遵循、ASMR',
+  },
+  {
+    group: '通用场景',
+    label: '刘飞 2.0',
+    value: 'zh_male_liufei_uranus_bigtts',
+    language: '中文',
+    capabilities: '情感变化、指令遵循、ASMR',
+  },
+  {
+    group: '通用场景',
+    label: '魅力苏菲 2.0',
+    value: 'zh_male_sophie_uranus_bigtts',
+    language: '中文',
+    capabilities: '情感变化、指令遵循、ASMR',
+  },
+  {
+    group: '通用场景',
+    label: '清新女声 2.0',
+    value: 'zh_female_qingxinnvsheng_uranus_bigtts',
+    language: '中文',
+    capabilities: '情感变化、指令遵循、ASMR',
+  },
+  {
+    group: '通用场景',
+    label: '甜美小源 2.0',
+    value: 'zh_female_tianmeixiaoyuan_uranus_bigtts',
+    language: '中文',
+    capabilities: '情感变化、指令遵循、ASMR',
+  },
+  {
+    group: '通用场景',
+    label: '甜美桃子 2.0',
+    value: 'zh_female_tianmeitaozi_uranus_bigtts',
+    language: '中文',
+    capabilities: '情感变化、指令遵循、ASMR',
+  },
+  {
+    group: '通用场景',
+    label: '爽快思思 2.0',
+    value: 'zh_female_shuangkuaisisi_uranus_bigtts',
+    language: '中文',
+    capabilities: '情感变化、指令遵循、ASMR',
+  },
+  {
+    group: '通用场景',
+    label: '邻家女孩 2.0',
+    value: 'zh_female_linjianvhai_uranus_bigtts',
+    language: '中文',
+    capabilities: '情感变化、指令遵循、ASMR',
+  },
+  {
+    group: '通用场景',
+    label: '少年梓辛 / Brayan 2.0',
+    value: 'zh_male_shaonianzixin_uranus_bigtts',
+    language: '中文',
+    capabilities: '情感变化、指令遵循、ASMR',
+  },
+  {
+    group: '通用场景',
+    label: '魅力女友 2.0',
+    value: 'zh_female_meilinvyou_uranus_bigtts',
+    language: '中文',
+    capabilities: '情感变化、指令遵循、ASMR',
+  },
+  {
+    group: '角色扮演',
+    label: '知性灿灿 2.0',
+    value: 'zh_female_cancan_uranus_bigtts',
+    language: '中文',
+    capabilities: '情感变化、指令遵循、ASMR',
+  },
+  {
+    group: '角色扮演',
+    label: '撒娇学妹 2.0',
+    value: 'zh_female_sajiaoxuemei_uranus_bigtts',
+    language: '中文',
+    capabilities: '情感变化、指令遵循、ASMR',
+  },
+  {
+    group: '角色扮演',
+    label: '可爱女生',
+    value: 'saturn_zh_female_keainvsheng_tob',
+    language: '中文',
+    capabilities: '指令遵循、COT/QA 功能',
+  },
+  {
+    group: '角色扮演',
+    label: '调皮公主',
+    value: 'saturn_zh_female_tiaopigongzhu_tob',
+    language: '中文',
+    capabilities: '指令遵循、COT/QA 功能',
+  },
+  {
+    group: '角色扮演',
+    label: '爽朗少年',
+    value: 'saturn_zh_male_shuanglangshaonian_tob',
+    language: '中文',
+    capabilities: '指令遵循、COT/QA 功能',
+  },
+  {
+    group: '角色扮演',
+    label: '天才同桌',
+    value: 'saturn_zh_male_tiancaitongzhuo_tob',
+    language: '中文',
+    capabilities: '指令遵循、COT/QA 功能',
+  },
+  {
+    group: '角色扮演',
+    label: '知性灿灿',
+    value: 'saturn_zh_female_cancan_tob',
+    language: '中文',
+    capabilities: '指令遵循、COT/QA 功能',
+  },
+  {
+    group: '视频配音',
+    label: '佩奇猪 2.0',
+    value: 'zh_female_peiqi_uranus_bigtts',
+    language: '中文',
+    capabilities: '情感变化、指令遵循、ASMR',
+  },
+  {
+    group: '视频配音',
+    label: '猴哥 2.0',
+    value: 'zh_male_sunwukong_uranus_bigtts',
+    language: '中文',
+    capabilities: '情感变化、指令遵循、ASMR',
+  },
+  {
+    group: '视频配音',
+    label: '大壹 2.0',
+    value: 'zh_male_dayi_uranus_bigtts',
+    language: '中文',
+    capabilities: '情感变化、指令遵循、ASMR',
+  },
+  {
+    group: '视频配音',
+    label: '黑猫侦探社咪仔 2.0',
+    value: 'zh_female_mizai_uranus_bigtts',
+    language: '中文',
+    capabilities: '情感变化、指令遵循、ASMR',
+  },
+  {
+    group: '视频配音',
+    label: '鸡汤女 2.0',
+    value: 'zh_female_jitangnv_uranus_bigtts',
+    language: '中文',
+    capabilities: '情感变化、指令遵循、ASMR',
+  },
+  {
+    group: '视频配音',
+    label: '流畅女声 2.0',
+    value: 'zh_female_liuchangnv_uranus_bigtts',
+    language: '中文',
+    capabilities: '情感变化、指令遵循、ASMR',
+  },
+  {
+    group: '视频配音',
+    label: '儒雅逸辰 2.0',
+    value: 'zh_male_ruyayichen_uranus_bigtts',
+    language: '中文',
+    capabilities: '情感变化、指令遵循、ASMR',
+  },
+  {
+    group: '教育场景',
+    label: 'Tina 老师 2.0',
+    value: 'zh_female_yingyujiaoxue_uranus_bigtts',
+    language: '中文、英式英语',
+    capabilities: '情感变化、指令遵循、ASMR',
+  },
+  {
+    group: '客服场景',
+    label: '暖阳女声 2.0',
+    value: 'zh_female_kefunvsheng_uranus_bigtts',
+    language: '中文',
+    capabilities: '情感变化、指令遵循、ASMR',
+  },
+  {
+    group: '客服场景',
+    label: '轻盈朵朵 2.0',
+    value: 'saturn_zh_female_qingyingduoduo_cs_tob',
+    language: '中文',
+    capabilities: '指令遵循',
+  },
+  {
+    group: '客服场景',
+    label: '温婉珊珊 2.0',
+    value: 'saturn_zh_female_wenwanshanshan_cs_tob',
+    language: '中文',
+    capabilities: '指令遵循',
+  },
+  {
+    group: '客服场景',
+    label: '热情艾娜 2.0',
+    value: 'saturn_zh_female_reqingaina_cs_tob',
+    language: '中文',
+    capabilities: '指令遵循',
+  },
+  {
+    group: '有声阅读',
+    label: '儿童绘本 2.0',
+    value: 'zh_female_xiaoxue_uranus_bigtts',
+    language: '中文',
+    capabilities: '情感变化、指令遵循、ASMR',
+  },
+  {
+    group: '多语种',
+    label: 'Tim',
+    value: 'en_male_tim_uranus_bigtts',
+    language: '美式英语',
+    capabilities: '情感变化、指令遵循、ASMR',
+  },
+  {
+    group: '多语种',
+    label: 'Dacey',
+    value: 'en_female_dacey_uranus_bigtts',
+    language: '美式英语',
+    capabilities: '情感变化、指令遵循、ASMR',
+  },
+  {
+    group: '多语种',
+    label: 'Stokie',
+    value: 'en_female_stokie_uranus_bigtts',
+    language: '美式英语',
+    capabilities: '情感变化、指令遵循、ASMR',
+  },
+];
+
+export const TTS_VOICE_GROUPS = Array.from(
+  new Set(TTS_VOICE_OPTIONS.map((voice) => voice.group))
+);
+
+export const DEFAULT_TTS_VOICE = 'zh_female_xiaohe_uranus_bigtts';

@@ -1,0 +1,16 @@
+[Unit]
+Description=My First Expo App Backend
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=__APP_ROOT__/backend
+ExecStart=__APP_ROOT__/backend/bin/api
+Restart=always
+RestartSec=5
+EnvironmentFile=__APP_ROOT__/backend/.env
+User=__APP_USER__
+Group=__APP_GROUP__
+
+[Install]
+WantedBy=multi-user.target
