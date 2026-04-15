@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 
@@ -22,20 +23,58 @@ func NewVolcEngineProvider(cfg config.VolcConfig) *VolcEngineProvider {
 }
 
 func (p *VolcEngineProvider) Synthesize(ctx context.Context, request ProviderRequest) (ProviderResult, error) {
-	resourceID := strings.TrimSpace(p.cfg.ResourceID)
+	appID := strings.TrimSpace(request.AppID)
+	if appID == "" {
+		appID = strings.TrimSpace(p.cfg.AppID)
+	}
+
+	accessToken := strings.TrimSpace(request.AccessToken)
+	if accessToken == "" {
+		accessToken = strings.TrimSpace(p.cfg.AccessToken)
+	}
+
+	endpoint := strings.TrimSpace(request.Endpoint)
+	if endpoint == "" {
+		endpoint = strings.TrimSpace(p.cfg.Endpoint)
+	}
+
+	resourceID := strings.TrimSpace(request.ResourceID)
+	if resourceID == "" {
+		resourceID = strings.TrimSpace(p.cfg.ResourceID)
+	}
 	if resourceID == "" {
 		resourceID = voiceToResourceID(request.VoiceType)
 	}
 
 	headers := http.Header{}
-	headers.Set("X-Api-App-Key", p.cfg.AppID)
-	headers.Set("X-Api-Access-Key", p.cfg.AccessToken)
+	headers.Set("X-Api-App-Key", appID)
+	headers.Set("X-Api-Access-Key", accessToken)
 	headers.Set("X-Api-Resource-Id", resourceID)
 	headers.Set("X-Api-Connect-Id", uuid.NewString())
 
 	dialer := websocket.Dialer{}
-	conn, _, err := dialer.DialContext(ctx, p.cfg.Endpoint, headers)
+	conn, response, err := dialer.DialContext(ctx, endpoint, headers)
 	if err != nil {
+		if response != nil {
+			responseBody, _ := io.ReadAll(response.Body)
+			_ = response.Body.Close()
+
+			detail := strings.TrimSpace(string(responseBody))
+			if detail != "" {
+				return ProviderResult{}, fmt.Errorf(
+					"connect volcengine failed: status=%d body=%s",
+					response.StatusCode,
+					detail,
+				)
+			}
+
+			return ProviderResult{}, fmt.Errorf(
+				"connect volcengine failed: status=%d err=%w",
+				response.StatusCode,
+				err,
+			)
+		}
+
 		return ProviderResult{}, fmt.Errorf("connect volcengine failed: %w", err)
 	}
 	defer conn.Close()

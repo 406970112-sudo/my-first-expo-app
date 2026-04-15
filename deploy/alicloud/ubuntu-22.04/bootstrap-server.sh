@@ -30,15 +30,18 @@ if ! command -v node >/dev/null 2>&1; then
 fi
 
 if ! command -v go >/dev/null 2>&1; then
-  curl -fsSL "https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz" -o /tmp/go.tar.gz
-  rm -rf /usr/local/go
-  tar -C /usr/local -xzf /tmp/go.tar.gz
+  if curl -fsSL "https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz" -o /tmp/go.tar.gz; then
+    rm -rf /usr/local/go
+    tar -C /usr/local -xzf /tmp/go.tar.gz
 
-  cat >/etc/profile.d/go.sh <<'EOF'
+    cat >/etc/profile.d/go.sh <<'EOF'
 export PATH="/usr/local/go/bin:$PATH"
 EOF
 
-  export PATH="/usr/local/go/bin:$PATH"
+    export PATH="/usr/local/go/bin:$PATH"
+  else
+    apt-get install -y golang-go
+  fi
 fi
 
 systemctl enable nginx

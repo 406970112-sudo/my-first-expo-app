@@ -23,8 +23,12 @@ type Provider interface {
 }
 
 type SynthesizeRequest struct {
+	AccessToken  string `json:"access_token,omitempty"`
+	AppID        string `json:"appid,omitempty"`
 	ContextText  string `json:"context_text"`
 	Encoding     string `json:"encoding"`
+	Endpoint     string `json:"endpoint,omitempty"`
+	ResourceID   string `json:"resource_id,omitempty"`
 	Text         string `json:"text"`
 	UseTagParser *bool  `json:"use_tag_parser,omitempty"`
 	VoiceType    string `json:"voice_type"`
@@ -38,8 +42,12 @@ type SynthesizeResult struct {
 }
 
 type ProviderRequest struct {
+	AccessToken  string
+	AppID        string
 	ContextText  string
 	Encoding     string
+	Endpoint     string
+	ResourceID   string
 	Text         string
 	UseTagParser *bool
 	VoiceType    string
@@ -65,8 +73,12 @@ func (s *Service) Synthesize(ctx context.Context, request SynthesizeRequest) (Sy
 	}
 
 	providerResult, err := s.provider.Synthesize(ctx, ProviderRequest{
+		AccessToken:  request.AccessToken,
+		AppID:        request.AppID,
 		ContextText:  request.ContextText,
 		Encoding:     request.Encoding,
+		Endpoint:     request.Endpoint,
+		ResourceID:   request.ResourceID,
 		Text:         request.Text,
 		UseTagParser: request.UseTagParser,
 		VoiceType:    request.VoiceType,
@@ -117,8 +129,12 @@ func (s *Service) validateRequest(request SynthesizeRequest) error {
 }
 
 func normalizeRequest(request SynthesizeRequest) SynthesizeRequest {
+	request.AccessToken = strings.TrimSpace(request.AccessToken)
+	request.AppID = strings.TrimSpace(request.AppID)
 	request.ContextText = strings.TrimSpace(request.ContextText)
 	request.Encoding = strings.TrimSpace(strings.ToLower(request.Encoding))
+	request.Endpoint = strings.TrimSpace(request.Endpoint)
+	request.ResourceID = strings.TrimSpace(request.ResourceID)
 	request.Text = strings.TrimSpace(request.Text)
 	request.VoiceType = strings.TrimSpace(request.VoiceType)
 	return request

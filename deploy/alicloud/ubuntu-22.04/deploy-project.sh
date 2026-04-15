@@ -12,10 +12,11 @@ APP_USER="${APP_USER:-www-data}"
 APP_GROUP="${APP_GROUP:-www-data}"
 SERVER_PORT="${SERVER_PORT:-3000}"
 GOPROXY="${GOPROXY:-https://goproxy.cn,direct}"
+NPM_REGISTRY="${NPM_REGISTRY:-https://registry.npmmirror.com}"
 
 VOLC_APP_ID="${VOLC_APP_ID:-}"
 VOLC_ACCESS_TOKEN="${VOLC_ACCESS_TOKEN:-}"
-VOLC_RESOURCE_ID="${VOLC_RESOURCE_ID:-seed-tts-2.0}"
+VOLC_RESOURCE_ID="${VOLC_RESOURCE_ID:-}"
 VOLC_ENDPOINT="${VOLC_ENDPOINT:-wss://openspeech.bytedance.com/api/v3/tts/unidirectional/stream}"
 
 RATE_LIMIT_WINDOW_MS="${RATE_LIMIT_WINDOW_MS:-900000}"
@@ -97,7 +98,7 @@ go build -o ./bin/api ./cmd/api
 popd >/dev/null
 
 pushd "$APP_ROOT/frontend" >/dev/null
-npm ci
+npm install --registry="$NPM_REGISTRY"
 npx expo export --platform web
 popd >/dev/null
 

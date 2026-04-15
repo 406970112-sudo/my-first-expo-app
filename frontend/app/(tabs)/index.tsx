@@ -93,7 +93,7 @@ export default function VoiceConsoleScreen() {
           context_text: contextText,
           encoding,
           text,
-          use_tag_parser: String(useTagParser),
+          use_tag_parser: useTagParser,
           voice_type: voiceType,
         }),
       });
@@ -101,7 +101,7 @@ export default function VoiceConsoleScreen() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || data.detail || '生成失败');
+        throw new Error(data.detail || data.error || '生成失败');
       }
 
       setResult({
