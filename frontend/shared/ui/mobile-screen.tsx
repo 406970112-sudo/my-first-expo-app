@@ -1,0 +1,50 @@
+import type { PropsWithChildren } from 'react';
+import type { StyleProp, ViewStyle } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+import { appLayout } from '@/constants/app-theme';
+import { useAppTheme } from '@/hooks/use-app-theme';
+
+type MobileScreenProps = PropsWithChildren<{
+  contentContainerStyle?: StyleProp<ViewStyle>;
+}>;
+
+export function MobileScreen({ children, contentContainerStyle }: MobileScreenProps) {
+  const { colors } = useAppTheme();
+
+  return (
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}>
+        <View
+          style={[
+            styles.content,
+            {
+              maxWidth: appLayout.screenMaxWidth,
+            },
+            contentContainerStyle,
+          ]}>
+          {children}
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 36,
+  },
+  content: {
+    alignSelf: 'center',
+    gap: 16,
+    paddingHorizontal: 16,
+    paddingTop: 10,
+    width: '100%',
+  },
+});

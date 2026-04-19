@@ -1,0 +1,51 @@
+export const appTheme = {
+  light: {
+    background: '#f4eee4',
+    surface: '#fff9f2',
+    surfaceMuted: '#efe4d6',
+    card: '#fffdf9',
+    text: '#1b222c',
+    mutedText: '#6e7683',
+    line: '#e5d7c8',
+    primary: '#1f4d78',
+    primarySoft: '#dae8f6',
+    accent: '#c56b47',
+    success: '#1f7b63',
+    hero: '#1f2735',
+    shadow: 'rgba(34, 24, 14, 0.12)',
+    tabInactive: '#918572',
+  },
+  dark: {
+    background: '#0f1317',
+    surface: '#151b20',
+    surfaceMuted: '#1d2730',
+    card: '#11171c',
+    text: '#f5efe7',
+    mutedText: '#9eacb9',
+    line: '#29323b',
+    primary: '#8ec1f3',
+    primarySoft: '#17314a',
+    accent: '#f0a073',
+    success: '#7cc8ab',
+    hero: '#0f1823',
+    shadow: 'rgba(0, 0, 0, 0.35)',
+    tabInactive: '#81909b',
+  },
+} as const;
+
+export const appLayout = {
+  screenMaxWidth: 430,
+  radius: {
+    sm: 16,
+    md: 24,
+    lg: 32,
+  },
+  spacing: {
+    xs: 8,
+    sm: 12,
+    md: 16,
+    lg: 20,
+    xl: 24,
+    xxl: 32,
+  },
+} as const;
