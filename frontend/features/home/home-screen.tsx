@@ -3,16 +3,35 @@ import { useRouter } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
-import { appTools, featuredBanner, popularGames, recentActivities } from '@/mocks/app-data';
 import { useAppTheme } from '@/hooks/use-app-theme';
+import { appTools, featuredBanner, popularGames, recentActivities } from '@/mocks/app-data';
 import { MobileScreen } from '@/shared/ui/mobile-screen';
-import type { AppTool } from '@/types/app';
+import type { AppTool, GameId, GameItem, RecentActivity } from '@/types/app';
 
 export function HomeScreen() {
   const router = useRouter();
   const { colors } = useAppTheme();
   const quickTools = appTools.slice(0, 4);
   const featuredTools = appTools.slice(0, 2);
+  const featuredGame = popularGames[0];
+
+  function openGame(gameId: GameId) {
+    router.push({
+      pathname: '/games/[gameId]',
+      params: { gameId },
+    });
+  }
+
+  function openRecentActivity(item: RecentActivity) {
+    if (item.toolId) {
+      router.push(`/tools/${item.toolId}`);
+      return;
+    }
+
+    if (item.gameId) {
+      openGame(item.gameId);
+    }
+  }
 
   return (
     <MobileScreen contentContainerStyle={styles.pageContent}>
@@ -25,7 +44,7 @@ export function HomeScreen() {
         <View>
           <ThemedText style={styles.brandTitle}>FunBox</ThemedText>
           <ThemedText style={[styles.brandSubtitle, { color: colors.mutedText }]}>
-            工具 · 游戏 · 发现
+            工具 / 游戏 / 发现
           </ThemedText>
         </View>
         <View style={styles.topActions}>
@@ -48,20 +67,29 @@ export function HomeScreen() {
         ]}>
         <MaterialCommunityIcons name="magnify" size={20} color={colors.mutedText} />
         <ThemedText style={[styles.searchText, { color: colors.mutedText }]}>
-          搜索工具、游戏、功能
+          搜索工具、游戏、玩法
         </ThemedText>
       </Pressable>
 
-      <View style={[styles.bannerCard, { backgroundColor: colors.hero }]}>
+      <Pressable
+        onPress={() => openGame(featuredGame.id)}
+        style={[styles.bannerCard, { backgroundColor: colors.hero }]}>
         <View style={styles.bannerBubblePink} />
         <View style={styles.bannerBubbleBlue} />
         <ThemedText style={styles.bannerEyebrow}>{featuredBanner.eyebrow}</ThemedText>
         <ThemedText style={styles.bannerTitle}>{featuredBanner.title}</ThemedText>
-        <ThemedText style={styles.bannerDescription}>{featuredBanner.description}</ThemedText>
-        <View style={styles.bannerAction}>
-          <ThemedText style={styles.bannerActionText}>{featuredBanner.actionLabel}</ThemedText>
+        <ThemedText style={styles.bannerDescription}>
+          {featuredBanner.description}
+        </ThemedText>
+        <View style={styles.bannerActionRow}>
+          <View style={styles.bannerAction}>
+            <ThemedText style={styles.bannerActionText}>{featuredBanner.actionLabel}</ThemedText>
+          </View>
+          <View style={[styles.bannerGameTag, { backgroundColor: 'rgba(255,255,255,0.14)' }]}>
+            <ThemedText style={styles.bannerGameTagText}>{featuredGame.name}</ThemedText>
+          </View>
         </View>
-      </View>
+      </Pressable>
 
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
@@ -97,11 +125,7 @@ export function HomeScreen() {
           {recentActivities.map((item) => (
             <Pressable
               key={item.id}
-              onPress={() => {
-                if (item.toolId) {
-                  router.push(`/tools/${item.toolId}`);
-                }
-              }}
+              onPress={() => openRecentActivity(item)}
               style={[
                 styles.listRow,
                 {
@@ -126,7 +150,9 @@ export function HomeScreen() {
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <ThemedText style={styles.sectionTitle}>热门工具</ThemedText>
-          <ThemedText style={[styles.sectionAction, { color: colors.mutedText }]}>查看更多</ThemedText>
+          <ThemedText style={[styles.sectionAction, { color: colors.mutedText }]}>
+            查看更多
+          </ThemedText>
         </View>
         <View style={styles.featuredGrid}>
           {featuredTools.map((tool, index) => (
@@ -134,8 +160,8 @@ export function HomeScreen() {
               key={tool.id}
               tool={tool}
               mutedTextColor={colors.mutedText}
-              variant={index === 0 ? 'dark' : 'light'}
               onPress={() => router.push(tool.route)}
+              variant={index === 0 ? 'dark' : 'light'}
             />
           ))}
         </View>
@@ -144,29 +170,13 @@ export function HomeScreen() {
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <ThemedText style={styles.sectionTitle}>热门游戏</ThemedText>
-          <ThemedText style={[styles.sectionAction, { color: colors.mutedText }]}>排行榜</ThemedText>
+          <ThemedText style={[styles.sectionAction, { color: colors.mutedText }]}>
+            即点即玩
+          </ThemedText>
         </View>
-        <View style={styles.listGroup}>
+        <View style={styles.gameGroup}>
           {popularGames.map((game) => (
-            <View
-              key={game.id}
-              style={[
-                styles.listRow,
-                {
-                  backgroundColor: colors.surface,
-                  borderColor: colors.line,
-                },
-              ]}>
-              <View>
-                <ThemedText style={styles.listTitle}>{game.name}</ThemedText>
-                <ThemedText style={[styles.listSubtitle, { color: colors.mutedText }]}>
-                  {game.genre} · 即点即玩
-                </ThemedText>
-              </View>
-              <View style={[styles.gamePill, { backgroundColor: colors.hero }]}>
-                <ThemedText style={styles.gamePillText}>{game.tag}</ThemedText>
-              </View>
-            </View>
+            <GameCard key={game.id} game={game} onPress={() => openGame(game.id)} />
           ))}
         </View>
       </View>
@@ -207,6 +217,66 @@ function FeaturedToolCard({
         ]}>
         {tool.usageLabel}
       </ThemedText>
+    </Pressable>
+  );
+}
+
+function GameCard({ game, onPress }: { game: GameItem; onPress: () => void }) {
+  const { colors } = useAppTheme();
+  const isPlayable = game.status === 'playable';
+
+  return (
+    <Pressable
+      onPress={onPress}
+      style={[
+        styles.gameCard,
+        {
+          backgroundColor: colors.surface,
+          borderColor: colors.line,
+        },
+      ]}>
+      <View style={styles.gameCardContent}>
+        <View style={[styles.gameIconWrap, { backgroundColor: `${game.accentColor}18` }]}>
+          <MaterialCommunityIcons
+            color={game.accentColor}
+            name={isPlayable ? 'gamepad-variant-outline' : 'controller-classic-outline'}
+            size={22}
+          />
+        </View>
+        <View style={styles.gameCopy}>
+          <View style={styles.gameTitleRow}>
+            <ThemedText style={styles.listTitle}>{game.name}</ThemedText>
+            <View style={[styles.gamePill, { backgroundColor: `${game.accentColor}16` }]}>
+              <ThemedText style={[styles.gamePillText, { color: game.accentColor }]}>
+                {game.tag}
+              </ThemedText>
+            </View>
+          </View>
+          <ThemedText style={[styles.listSubtitle, { color: colors.mutedText }]}>
+            {game.genre}
+          </ThemedText>
+          <ThemedText style={[styles.gameDescription, { color: colors.mutedText }]}>
+            {game.description}
+          </ThemedText>
+        </View>
+      </View>
+      <View
+        style={[
+          styles.playButton,
+          {
+            backgroundColor: isPlayable ? colors.hero : colors.surfaceMuted,
+          },
+        ]}>
+        <ThemedText
+          style={[
+            styles.playButtonText,
+            {
+              color: isPlayable ? '#ffffff' : colors.mutedText,
+            },
+          ]}>
+          {isPlayable ? '开玩' : '查看'}
+        </ThemedText>
+      </View>
     </Pressable>
   );
 }
@@ -314,24 +384,40 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     lineHeight: 31,
     marginTop: 6,
-    width: '78%',
+    width: '84%',
   },
   bannerDescription: {
     color: 'rgba(255,255,255,0.8)',
     fontSize: 13,
     lineHeight: 20,
     marginTop: 10,
-    width: '80%',
+    width: '82%',
+  },
+  bannerActionRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginTop: 16,
   },
   bannerAction: {
     alignSelf: 'flex-start',
     backgroundColor: 'rgba(255,255,255,0.16)',
     borderRadius: 999,
-    marginTop: 16,
     paddingHorizontal: 14,
     paddingVertical: 9,
   },
   bannerActionText: {
+    color: '#ffffff',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  bannerGameTag: {
+    borderRadius: 999,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+  },
+  bannerGameTagText: {
     color: '#ffffff',
     fontSize: 12,
     fontWeight: '700',
@@ -443,13 +529,56 @@ const styles = StyleSheet.create({
   featuredMutedOnDark: {
     color: 'rgba(255,255,255,0.7)',
   },
+  gameGroup: {
+    gap: 10,
+  },
+  gameCard: {
+    borderRadius: 24,
+    borderWidth: 1,
+    gap: 14,
+    padding: 16,
+  },
+  gameCardContent: {
+    flexDirection: 'row',
+    gap: 14,
+  },
+  gameIconWrap: {
+    alignItems: 'center',
+    borderRadius: 18,
+    height: 48,
+    justifyContent: 'center',
+    width: 48,
+  },
+  gameCopy: {
+    flex: 1,
+  },
+  gameTitleRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  gameDescription: {
+    fontSize: 12,
+    lineHeight: 19,
+    marginTop: 8,
+  },
   gamePill: {
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  gamePillText: {
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  playButton: {
+    alignSelf: 'flex-start',
     borderRadius: 999,
     paddingHorizontal: 12,
     paddingVertical: 8,
   },
-  gamePillText: {
-    color: '#ffffff',
+  playButtonText: {
     fontSize: 12,
     fontWeight: '700',
   },

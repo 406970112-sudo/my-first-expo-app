@@ -10,9 +10,9 @@ import type {
 
 export const featuredBanner = {
   eyebrow: '今日推荐',
-  title: '新用户礼包 + 热门能力集合',
-  description: '把高频工具、轻游戏和个人成长任务收拢到一个移动端容器里。',
-  actionLabel: '立即查看',
+  title: '把工具、游戏和成长任务装进一个轻量入口',
+  description: '先做高频刚需，再接入更好玩的体验。热门游戏区现已加入首个可玩模块。',
+  actionLabel: '查看热游',
 };
 
 export const appTools: AppTool[] = [
@@ -34,7 +34,7 @@ export const appTools: AppTool[] = [
     id: 'image-cleanup',
     name: '一键抠图',
     tagline: '图片处理',
-    description: '常用营销素材处理入口，保留为后续接入位。',
+    description: '常用素材处理入口已预留，方便后续继续接入图像能力。',
     icon: 'image-filter-center-focus',
     category: '多媒体',
     route: '/tools/image-cleanup',
@@ -82,30 +82,43 @@ export const recentActivities: RecentActivity[] = [
   },
   {
     id: 'recent-game',
-    title: '脑力挑战',
+    title: '贪吃蛇大作战',
     type: '游戏',
-    actionLabel: '继续闯关',
+    actionLabel: '继续挑战',
+    gameId: 'snake-brawl',
   },
 ];
 
 export const popularGames: GameItem[] = [
   {
-    id: 'game-1',
-    name: '消除乐园',
-    genre: '轻松休闲',
-    tag: '热门',
+    id: 'snake-brawl',
+    name: '贪吃蛇大作战',
+    genre: '休闲街机',
+    tag: '可玩',
+    description: '经典、无尽、闯关三种模式，支持方向键与移动端按键控制。',
+    accentColor: '#20c997',
+    route: '/games/snake-brawl',
+    status: 'playable',
   },
   {
-    id: 'game-2',
+    id: 'brain-challenge',
     name: '脑力挑战',
     genre: '益智闯关',
     tag: '新游',
+    description: '拼图与记忆玩法原型位，后续可扩展成关卡型轻游戏。',
+    accentColor: '#ff8a5b',
+    route: '/games/brain-challenge',
+    status: 'coming-soon',
   },
   {
-    id: 'game-3',
+    id: 'speed-racer',
     name: '极速冲刺',
-    genre: '即时对战',
-    tag: '推荐',
+    genre: '即时竞速',
+    tag: '预告',
+    description: '保留竞速类游戏位，用于后续补充更强节奏感的玩法。',
+    accentColor: '#4f7cff',
+    route: '/games/speed-racer',
+    status: 'coming-soon',
   },
 ];
 
@@ -144,4 +157,8 @@ export const profile = {
 
 export function getToolById(toolId: ToolId) {
   return appTools.find((tool) => tool.id === toolId);
+}
+
+export function getGameById(gameId: GameItem['id']) {
+  return popularGames.find((game) => game.id === gameId);
 }
