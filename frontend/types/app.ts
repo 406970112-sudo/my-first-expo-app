@@ -9,8 +9,11 @@ export type ToolId =
   | 'smart-translation'
   | 'focus-plan';
 
+export type GameId = 'snake-brawl' | 'brain-challenge' | 'speed-racer';
+
 export type ToolCategory = 'AI' | '音频' | '效率' | '多媒体';
 export type ToolStatus = 'available' | 'coming-soon';
+export type GameStatus = 'playable' | 'coming-soon';
 
 export type AppTool = {
   id: ToolId;
@@ -33,13 +36,18 @@ export type RecentActivity = {
   type: '工具' | '游戏';
   actionLabel: string;
   toolId?: ToolId;
+  gameId?: GameId;
 };
 
 export type GameItem = {
-  id: string;
+  id: GameId;
   name: string;
   genre: string;
   tag: string;
+  description: string;
+  accentColor: string;
+  route: `/games/${GameId}`;
+  status: GameStatus;
 };
 
 export type ProfileMetric = {
