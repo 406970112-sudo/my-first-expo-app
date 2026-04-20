@@ -1,29 +1,44 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { profile } from '@/mocks/app-data';
 import { useAppTheme } from '@/hooks/use-app-theme';
-import { ListRowCard } from '@/shared/ui/list-row-card';
 import { MobileScreen } from '@/shared/ui/mobile-screen';
-import { PageHeader } from '@/shared/ui/page-header';
-import { SectionHeading } from '@/shared/ui/section-heading';
-import { SurfaceCard } from '@/shared/ui/surface-card';
+
+const benefitPalettes = [
+  { backgroundColor: '#ffffff' },
+  { backgroundColor: '#eef3ff' },
+  { backgroundColor: '#fff0f5' },
+] as const;
 
 export function ProfileScreen() {
   const { colors } = useAppTheme();
 
   return (
-    <MobileScreen>
-      <PageHeader
-        eyebrow="Profile"
-        title="个人中心"
-        subtitle="用统一的视觉容器承接用户资产、权益、任务和设置，方便后续继续接业务。"
-      />
+    <MobileScreen contentContainerStyle={styles.pageContent}>
+      <View pointerEvents="none" style={styles.backgroundLayer}>
+        <View style={[styles.backgroundOrbTop, { backgroundColor: '#dce7ff' }]} />
+        <View style={[styles.backgroundOrbBottom, { backgroundColor: '#ffddeb' }]} />
+      </View>
 
-      <View style={[styles.heroCard, { backgroundColor: colors.hero }]}>
-        <View style={styles.profileRow}>
-          <View style={styles.avatar}>
+      <View style={styles.topBar}>
+        <ThemedText style={styles.pageTitle}>个人中心</ThemedText>
+        <View style={styles.topActions}>
+          <View style={[styles.topActionButton, { backgroundColor: colors.surface }]}>
+            <MaterialCommunityIcons name="gift-outline" size={20} color={colors.text} />
+          </View>
+          <View style={[styles.topActionButton, { backgroundColor: colors.surface }]}>
+            <MaterialCommunityIcons name="cog-outline" size={20} color={colors.text} />
+          </View>
+        </View>
+      </View>
+
+      <View style={[styles.profileHero, { backgroundColor: colors.hero }]}>
+        <View style={styles.heroBubblePink} />
+        <View style={styles.heroBubbleBlue} />
+        <View style={styles.profileHeaderRow}>
+          <View style={styles.avatarWrap}>
             <MaterialCommunityIcons name="account" size={28} color="#ffffff" />
           </View>
           <View style={styles.profileCopy}>
@@ -33,7 +48,7 @@ export function ProfileScreen() {
             </ThemedText>
           </View>
         </View>
-        <ThemedText style={styles.signature}>{profile.user.signature}</ThemedText>
+
         <View style={styles.metricGrid}>
           {profile.metrics.map((metric) => (
             <View key={metric.id} style={styles.metricCard}>
@@ -45,63 +60,155 @@ export function ProfileScreen() {
       </View>
 
       <View style={styles.section}>
-        <SectionHeading title="我的权益" />
-        <View style={styles.benefitGrid}>
-          {profile.benefits.map((benefit) => (
-            <SurfaceCard key={benefit.id} style={styles.benefitCard}>
+        <ThemedText style={styles.sectionTitle}>我的权益</ThemedText>
+        <View style={styles.benefitsGrid}>
+          {profile.benefits.map((benefit, index) => (
+            <View
+              key={benefit.id}
+              style={[
+                styles.benefitCard,
+                benefitPalettes[index],
+                {
+                  borderColor: colors.line,
+                },
+              ]}>
               <ThemedText style={styles.benefitValue}>{benefit.value}</ThemedText>
               <ThemedText style={[styles.benefitLabel, { color: colors.mutedText }]}>
                 {benefit.label}
               </ThemedText>
-            </SurfaceCard>
+            </View>
           ))}
         </View>
       </View>
 
       <View style={styles.section}>
-        <SectionHeading title="常用功能" />
-        {profile.menus.map((menu) => (
-          <ListRowCard
-            key={menu.id}
-            title={menu.title}
-            renderRight={
-              menu.badge ? (
-                <View style={[styles.badge, { backgroundColor: colors.primary }]}>
-                  <ThemedText style={styles.badgeText}>{menu.badge}</ThemedText>
+        <ThemedText style={styles.sectionTitle}>常用功能</ThemedText>
+        <View style={styles.menuGroup}>
+          {profile.menus.map((menu) => (
+            <Pressable
+              key={menu.id}
+              style={[
+                styles.menuRow,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.line,
+                },
+              ]}>
+              <ThemedText style={styles.menuTitle}>{menu.title}</ThemedText>
+              {menu.badge ? (
+                <View style={[styles.menuBadge, { backgroundColor: colors.primary }]}>
+                  <ThemedText style={styles.menuBadgeText}>{menu.badge}</ThemedText>
                 </View>
               ) : (
                 <MaterialCommunityIcons name="chevron-right" size={22} color={colors.mutedText} />
-              )
-            }
-          />
-        ))}
+              )}
+            </Pressable>
+          ))}
+        </View>
       </View>
 
-      <SurfaceCard style={styles.taskCard}>
-        <ThemedText style={styles.taskTitle}>{profile.growthTask.title}</ThemedText>
-        <ThemedText style={[styles.taskDescription, { color: colors.mutedText }]}>
+      <View
+        style={[
+          styles.growthCard,
+          {
+            backgroundColor: colors.surface,
+            borderColor: colors.line,
+          },
+        ]}>
+        <ThemedText style={styles.growthTitle}>{profile.growthTask.title}</ThemedText>
+        <ThemedText style={[styles.growthDescription, { color: colors.mutedText }]}>
           {profile.growthTask.description}
         </ThemedText>
-        <View style={[styles.taskAction, { backgroundColor: colors.hero }]}>
-          <ThemedText style={styles.taskActionText}>{profile.growthTask.actionLabel}</ThemedText>
+        <View style={[styles.growthAction, { backgroundColor: colors.hero }]}>
+          <ThemedText style={styles.growthActionText}>{profile.growthTask.actionLabel}</ThemedText>
         </View>
-      </SurfaceCard>
+      </View>
     </MobileScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  heroCard: {
-    borderRadius: 30,
-    gap: 18,
-    padding: 20,
+  pageContent: {
+    paddingTop: 14,
   },
-  profileRow: {
+  backgroundLayer: {
+    left: 0,
+    position: 'absolute',
+    right: 0,
+    top: 0,
+  },
+  backgroundOrbTop: {
+    borderRadius: 999,
+    height: 220,
+    opacity: 0.48,
+    position: 'absolute',
+    right: -88,
+    top: -88,
+    width: 220,
+  },
+  backgroundOrbBottom: {
+    borderRadius: 999,
+    height: 150,
+    left: -44,
+    opacity: 0.58,
+    position: 'absolute',
+    top: 310,
+    width: 150,
+  },
+  topBar: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  pageTitle: {
+    fontSize: 24,
+    fontWeight: '800',
+  },
+  topActions: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  topActionButton: {
+    alignItems: 'center',
+    borderRadius: 18,
+    elevation: 1,
+    height: 38,
+    justifyContent: 'center',
+    shadowOffset: { height: 10, width: 0 },
+    shadowOpacity: 0.08,
+    shadowRadius: 18,
+    width: 38,
+  },
+  profileHero: {
+    borderRadius: 30,
+    overflow: 'hidden',
+    padding: 20,
+    position: 'relative',
+  },
+  heroBubblePink: {
+    backgroundColor: 'rgba(255,107,143,0.28)',
+    borderRadius: 999,
+    height: 132,
+    position: 'absolute',
+    right: -20,
+    top: -34,
+    width: 132,
+  },
+  heroBubbleBlue: {
+    backgroundColor: 'rgba(98,154,255,0.22)',
+    borderRadius: 999,
+    bottom: -46,
+    height: 128,
+    left: -8,
+    width: 128,
+    position: 'absolute',
+  },
+  profileHeaderRow: {
     alignItems: 'center',
     flexDirection: 'row',
     gap: 14,
   },
-  avatar: {
+  avatarWrap: {
     alignItems: 'center',
     backgroundColor: 'rgba(255,255,255,0.18)',
     borderRadius: 999,
@@ -121,14 +228,10 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.72)',
     fontSize: 13,
   },
-  signature: {
-    color: 'rgba(255,255,255,0.78)',
-    fontSize: 14,
-    lineHeight: 21,
-  },
   metricGrid: {
     flexDirection: 'row',
     gap: 10,
+    marginTop: 18,
   },
   metricCard: {
     backgroundColor: 'rgba(255,255,255,0.12)',
@@ -150,13 +253,18 @@ const styles = StyleSheet.create({
   section: {
     gap: 12,
   },
-  benefitGrid: {
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  benefitsGrid: {
     flexDirection: 'row',
     gap: 10,
   },
   benefitCard: {
+    borderRadius: 22,
+    borderWidth: 1,
     flex: 1,
-    gap: 6,
     paddingHorizontal: 12,
     paddingVertical: 16,
   },
@@ -166,37 +274,56 @@ const styles = StyleSheet.create({
   },
   benefitLabel: {
     fontSize: 12,
+    marginTop: 6,
   },
-  badge: {
+  menuGroup: {
+    gap: 10,
+  },
+  menuRow: {
+    alignItems: 'center',
+    borderRadius: 22,
+    borderWidth: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 15,
+  },
+  menuTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  menuBadge: {
     borderRadius: 999,
     paddingHorizontal: 10,
     paddingVertical: 6,
   },
-  badgeText: {
+  menuBadgeText: {
     color: '#ffffff',
     fontSize: 12,
     fontWeight: '700',
   },
-  taskCard: {
-    gap: 8,
+  growthCard: {
+    borderRadius: 24,
+    borderWidth: 1,
     padding: 18,
   },
-  taskTitle: {
+  growthTitle: {
     fontSize: 17,
     fontWeight: '800',
   },
-  taskDescription: {
+  growthDescription: {
     fontSize: 14,
     lineHeight: 22,
+    marginTop: 6,
   },
-  taskAction: {
+  growthAction: {
     alignSelf: 'flex-start',
     borderRadius: 999,
-    marginTop: 4,
+    marginTop: 14,
     paddingHorizontal: 14,
     paddingVertical: 10,
   },
-  taskActionText: {
+  growthActionText: {
     color: '#ffffff',
     fontSize: 12,
     fontWeight: '700',

@@ -1,28 +1,42 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useRouter } from 'expo-router';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
-import { featuredBanner, appTools, popularGames, recentActivities } from '@/mocks/app-data';
+import { appTools, featuredBanner, popularGames, recentActivities } from '@/mocks/app-data';
 import { useAppTheme } from '@/hooks/use-app-theme';
-import { ListRowCard } from '@/shared/ui/list-row-card';
 import { MobileScreen } from '@/shared/ui/mobile-screen';
-import { PageHeader } from '@/shared/ui/page-header';
-import { SectionHeading } from '@/shared/ui/section-heading';
-import { ToolCard } from '@/shared/ui/tool-card';
+import type { AppTool } from '@/types/app';
 
 export function HomeScreen() {
   const router = useRouter();
   const { colors } = useAppTheme();
   const quickTools = appTools.slice(0, 4);
-  const featuredTools = appTools.filter((tool) => tool.featured);
+  const featuredTools = appTools.slice(0, 2);
 
   return (
-    <MobileScreen>
-      <PageHeader
-        eyebrow="FunBox"
-        title="移动端工具聚合首页"
-        subtitle="把原型拆成可持续开发的首页模块，保留轻量、偏产品化的浏览节奏。"
-      />
+    <MobileScreen contentContainerStyle={styles.pageContent}>
+      <View pointerEvents="none" style={styles.backgroundLayer}>
+        <View style={[styles.backgroundOrbLarge, { backgroundColor: '#d8e4ff' }]} />
+        <View style={[styles.backgroundOrbSmall, { backgroundColor: '#ffd8e8' }]} />
+      </View>
+
+      <View style={styles.topBar}>
+        <View>
+          <ThemedText style={styles.brandTitle}>FunBox</ThemedText>
+          <ThemedText style={[styles.brandSubtitle, { color: colors.mutedText }]}>
+            工具 · 游戏 · 发现
+          </ThemedText>
+        </View>
+        <View style={styles.topActions}>
+          <View style={[styles.topActionButton, { backgroundColor: colors.surface }]}>
+            <MaterialCommunityIcons name="bell-outline" size={20} color={colors.text} />
+          </View>
+          <View style={[styles.topActionButton, { backgroundColor: colors.surface }]}>
+            <MaterialCommunityIcons name="wallet-outline" size={20} color={colors.text} />
+          </View>
+        </View>
+      </View>
 
       <Pressable
         style={[
@@ -32,144 +46,292 @@ export function HomeScreen() {
             borderColor: colors.line,
           },
         ]}>
-        <ThemedText style={{ color: colors.mutedText }}>
-          搜索工具、游戏或最近使用的能力
+        <MaterialCommunityIcons name="magnify" size={20} color={colors.mutedText} />
+        <ThemedText style={[styles.searchText, { color: colors.mutedText }]}>
+          搜索工具、游戏、功能
         </ThemedText>
       </Pressable>
 
-      <View style={[styles.heroCard, { backgroundColor: colors.hero }]}>
-        <View style={styles.heroDecorPrimary} />
-        <View style={styles.heroDecorSecondary} />
-        <ThemedText style={styles.heroEyebrow}>{featuredBanner.eyebrow}</ThemedText>
-        <ThemedText style={styles.heroTitle}>{featuredBanner.title}</ThemedText>
-        <ThemedText style={styles.heroDescription}>{featuredBanner.description}</ThemedText>
-        <View style={styles.heroAction}>
-          <ThemedText style={styles.heroActionText}>{featuredBanner.actionLabel}</ThemedText>
+      <View style={[styles.bannerCard, { backgroundColor: colors.hero }]}>
+        <View style={styles.bannerBubblePink} />
+        <View style={styles.bannerBubbleBlue} />
+        <ThemedText style={styles.bannerEyebrow}>{featuredBanner.eyebrow}</ThemedText>
+        <ThemedText style={styles.bannerTitle}>{featuredBanner.title}</ThemedText>
+        <ThemedText style={styles.bannerDescription}>{featuredBanner.description}</ThemedText>
+        <View style={styles.bannerAction}>
+          <ThemedText style={styles.bannerActionText}>{featuredBanner.actionLabel}</ThemedText>
         </View>
       </View>
 
       <View style={styles.section}>
-        <SectionHeading title="快捷入口" actionLabel="全部工具" />
-        <View style={styles.toolGrid}>
+        <View style={styles.sectionHeader}>
+          <ThemedText style={styles.sectionTitle}>快捷入口</ThemedText>
+          <ThemedText style={[styles.sectionAction, { color: colors.mutedText }]}>全部</ThemedText>
+        </View>
+        <View style={styles.quickGrid}>
           {quickTools.map((tool) => (
-            <View key={tool.id} style={styles.toolGridItem}>
-              <ToolCard tool={tool} compact onPress={() => router.push(tool.route)} />
-            </View>
+            <Pressable
+              key={tool.id}
+              onPress={() => router.push(tool.route)}
+              style={[
+                styles.quickItem,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.line,
+                },
+              ]}>
+              <View style={[styles.quickIconWrap, { backgroundColor: `${tool.accentColor}18` }]}>
+                <MaterialCommunityIcons name={tool.icon} size={24} color={tool.accentColor} />
+              </View>
+              <ThemedText numberOfLines={1} style={styles.quickLabel}>
+                {tool.name}
+              </ThemedText>
+            </Pressable>
           ))}
         </View>
       </View>
 
       <View style={styles.section}>
-        <SectionHeading title="最近使用" />
-        {recentActivities.map((item) => (
-          <ListRowCard
-            key={item.id}
-            title={item.title}
-            subtitle={item.type}
-            onPress={() => {
-              if (item.toolId) {
-                router.push(`/tools/${item.toolId}`);
-              }
-            }}
-            renderRight={
-              <View style={[styles.inlineAction, { backgroundColor: colors.primary }]}>
-                <ThemedText style={styles.inlineActionText}>{item.actionLabel}</ThemedText>
+        <ThemedText style={styles.sectionTitle}>最近使用</ThemedText>
+        <View style={styles.listGroup}>
+          {recentActivities.map((item) => (
+            <Pressable
+              key={item.id}
+              onPress={() => {
+                if (item.toolId) {
+                  router.push(`/tools/${item.toolId}`);
+                }
+              }}
+              style={[
+                styles.listRow,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.line,
+                },
+              ]}>
+              <View>
+                <ThemedText style={styles.listTitle}>{item.title}</ThemedText>
+                <ThemedText style={[styles.listSubtitle, { color: colors.mutedText }]}>
+                  {item.type}
+                </ThemedText>
               </View>
-            }
-          />
-        ))}
-      </View>
-
-      <View style={styles.section}>
-        <SectionHeading title="热门工具" actionLabel="持续上新" />
-        <View style={styles.hotToolGrid}>
-          {featuredTools.map((tool) => (
-            <View key={tool.id} style={styles.hotToolItem}>
-              <ToolCard tool={tool} onPress={() => router.push(tool.route)} />
-            </View>
+              <View style={[styles.listAction, { backgroundColor: colors.hero }]}>
+                <ThemedText style={styles.listActionText}>{item.actionLabel}</ThemedText>
+              </View>
+            </Pressable>
           ))}
         </View>
       </View>
 
       <View style={styles.section}>
-        <SectionHeading title="热门游戏" actionLabel="排行榜" />
-        {popularGames.map((game) => (
-          <ListRowCard
-            key={game.id}
-            title={game.name}
-            subtitle={`${game.genre} · 即点即玩`}
-            renderRight={
-              <View style={[styles.gameTag, { backgroundColor: colors.hero }]}>
-                <ThemedText style={styles.gameTagText}>{game.tag}</ThemedText>
+        <View style={styles.sectionHeader}>
+          <ThemedText style={styles.sectionTitle}>热门工具</ThemedText>
+          <ThemedText style={[styles.sectionAction, { color: colors.mutedText }]}>查看更多</ThemedText>
+        </View>
+        <View style={styles.featuredGrid}>
+          {featuredTools.map((tool, index) => (
+            <FeaturedToolCard
+              key={tool.id}
+              tool={tool}
+              mutedTextColor={colors.mutedText}
+              variant={index === 0 ? 'dark' : 'light'}
+              onPress={() => router.push(tool.route)}
+            />
+          ))}
+        </View>
+      </View>
+
+      <View style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <ThemedText style={styles.sectionTitle}>热门游戏</ThemedText>
+          <ThemedText style={[styles.sectionAction, { color: colors.mutedText }]}>排行榜</ThemedText>
+        </View>
+        <View style={styles.listGroup}>
+          {popularGames.map((game) => (
+            <View
+              key={game.id}
+              style={[
+                styles.listRow,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.line,
+                },
+              ]}>
+              <View>
+                <ThemedText style={styles.listTitle}>{game.name}</ThemedText>
+                <ThemedText style={[styles.listSubtitle, { color: colors.mutedText }]}>
+                  {game.genre} · 即点即玩
+                </ThemedText>
               </View>
-            }
-          />
-        ))}
+              <View style={[styles.gamePill, { backgroundColor: colors.hero }]}>
+                <ThemedText style={styles.gamePillText}>{game.tag}</ThemedText>
+              </View>
+            </View>
+          ))}
+        </View>
       </View>
     </MobileScreen>
   );
 }
 
+function FeaturedToolCard({
+  tool,
+  mutedTextColor,
+  onPress,
+  variant,
+}: {
+  tool: AppTool;
+  mutedTextColor: string;
+  onPress: () => void;
+  variant: 'dark' | 'light';
+}) {
+  const isDark = variant === 'dark';
+
+  return (
+    <Pressable
+      onPress={onPress}
+      style={[
+        styles.featuredCard,
+        isDark ? styles.featuredCardDark : styles.featuredCardLight,
+      ]}>
+      <ThemedText style={[styles.featuredKicker, isDark ? styles.featuredTextOnDark : undefined]}>
+        {tool.category} 工具
+      </ThemedText>
+      <ThemedText style={[styles.featuredName, isDark ? styles.featuredTextOnDark : undefined]}>
+        {tool.name}
+      </ThemedText>
+      <ThemedText
+        style={[
+          styles.featuredUsage,
+          isDark ? styles.featuredMutedOnDark : { color: mutedTextColor },
+        ]}>
+        {tool.usageLabel}
+      </ThemedText>
+    </Pressable>
+  );
+}
+
 const styles = StyleSheet.create({
+  pageContent: {
+    paddingTop: 14,
+  },
+  backgroundLayer: {
+    left: 0,
+    position: 'absolute',
+    right: 0,
+    top: 0,
+  },
+  backgroundOrbLarge: {
+    borderRadius: 999,
+    height: 220,
+    opacity: 0.5,
+    position: 'absolute',
+    right: -90,
+    top: -70,
+    width: 220,
+  },
+  backgroundOrbSmall: {
+    borderRadius: 999,
+    height: 140,
+    left: -54,
+    opacity: 0.7,
+    position: 'absolute',
+    top: 220,
+    width: 140,
+  },
+  topBar: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  brandTitle: {
+    fontSize: 24,
+    fontWeight: '800',
+  },
+  brandSubtitle: {
+    fontSize: 12,
+    marginTop: 4,
+  },
+  topActions: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  topActionButton: {
+    alignItems: 'center',
+    borderRadius: 18,
+    elevation: 1,
+    height: 38,
+    justifyContent: 'center',
+    shadowOffset: { height: 10, width: 0 },
+    shadowOpacity: 0.08,
+    shadowRadius: 18,
+    width: 38,
+  },
   searchBar: {
+    alignItems: 'center',
     borderRadius: 18,
     borderWidth: 1,
+    flexDirection: 'row',
+    gap: 10,
     paddingHorizontal: 16,
     paddingVertical: 14,
   },
-  heroCard: {
+  searchText: {
+    fontSize: 14,
+  },
+  bannerCard: {
     borderRadius: 30,
     overflow: 'hidden',
-    padding: 22,
+    padding: 20,
     position: 'relative',
   },
-  heroDecorPrimary: {
-    backgroundColor: 'rgba(255,255,255,0.08)',
+  bannerBubblePink: {
+    backgroundColor: 'rgba(255,107,143,0.28)',
     borderRadius: 999,
-    height: 130,
+    height: 132,
     position: 'absolute',
-    right: -12,
-    top: -24,
-    width: 130,
+    right: -18,
+    top: -36,
+    width: 132,
   },
-  heroDecorSecondary: {
-    backgroundColor: 'rgba(255,255,255,0.06)',
+  bannerBubbleBlue: {
+    backgroundColor: 'rgba(98,154,255,0.24)',
     borderRadius: 999,
-    bottom: -32,
-    height: 120,
-    left: -24,
+    bottom: -42,
+    height: 126,
+    left: -12,
     position: 'absolute',
-    width: 120,
+    width: 126,
   },
-  heroEyebrow: {
-    color: 'rgba(255,255,255,0.72)',
+  bannerEyebrow: {
+    color: 'rgba(255,255,255,0.76)',
     fontSize: 13,
     fontWeight: '700',
   },
-  heroTitle: {
+  bannerTitle: {
     color: '#ffffff',
-    fontSize: 24,
+    fontSize: 25,
     fontWeight: '800',
-    lineHeight: 30,
-    marginTop: 8,
-    maxWidth: '78%',
+    lineHeight: 31,
+    marginTop: 6,
+    width: '78%',
   },
-  heroDescription: {
-    color: 'rgba(255,255,255,0.78)',
-    fontSize: 14,
-    lineHeight: 21,
+  bannerDescription: {
+    color: 'rgba(255,255,255,0.8)',
+    fontSize: 13,
+    lineHeight: 20,
     marginTop: 10,
-    maxWidth: '82%',
+    width: '80%',
   },
-  heroAction: {
+  bannerAction: {
     alignSelf: 'flex-start',
-    backgroundColor: 'rgba(255,255,255,0.18)',
+    backgroundColor: 'rgba(255,255,255,0.16)',
     borderRadius: 999,
-    marginTop: 18,
+    marginTop: 16,
     paddingHorizontal: 14,
-    paddingVertical: 10,
+    paddingVertical: 9,
   },
-  heroActionText: {
+  bannerActionText: {
     color: '#ffffff',
     fontSize: 12,
     fontWeight: '700',
@@ -177,38 +339,116 @@ const styles = StyleSheet.create({
   section: {
     gap: 12,
   },
-  toolGrid: {
+  sectionHeader: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  sectionAction: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  quickGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 12,
+    gap: 10,
   },
-  toolGridItem: {
-    width: '22.6%',
+  quickItem: {
+    alignItems: 'center',
+    borderRadius: 22,
+    borderWidth: 1,
+    paddingHorizontal: 8,
+    paddingVertical: 14,
+    width: '22.9%',
   },
-  hotToolGrid: {
+  quickIconWrap: {
+    alignItems: 'center',
+    borderRadius: 18,
+    height: 48,
+    justifyContent: 'center',
+    marginBottom: 10,
+    width: 48,
+  },
+  quickLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  listGroup: {
+    gap: 10,
+  },
+  listRow: {
+    alignItems: 'center',
+    borderRadius: 22,
+    borderWidth: 1,
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
   },
-  hotToolItem: {
-    width: '47%',
+  listTitle: {
+    fontSize: 15,
+    fontWeight: '700',
   },
-  inlineAction: {
+  listSubtitle: {
+    fontSize: 12,
+    marginTop: 4,
+  },
+  listAction: {
     borderRadius: 999,
     paddingHorizontal: 12,
     paddingVertical: 8,
   },
-  inlineActionText: {
+  listActionText: {
     color: '#ffffff',
     fontSize: 12,
     fontWeight: '700',
   },
-  gameTag: {
+  featuredGrid: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  featuredCard: {
+    borderRadius: 24,
+    minHeight: 138,
+    overflow: 'hidden',
+    padding: 16,
+    width: '48.5%',
+  },
+  featuredCardDark: {
+    backgroundColor: '#151b3b',
+  },
+  featuredCardLight: {
+    backgroundColor: '#f4f7ff',
+  },
+  featuredKicker: {
+    fontSize: 13,
+  },
+  featuredName: {
+    fontSize: 18,
+    fontWeight: '800',
+    marginTop: 8,
+  },
+  featuredUsage: {
+    fontSize: 12,
+    marginTop: 26,
+  },
+  featuredTextOnDark: {
+    color: '#ffffff',
+  },
+  featuredMutedOnDark: {
+    color: 'rgba(255,255,255,0.7)',
+  },
+  gamePill: {
     borderRadius: 999,
     paddingHorizontal: 12,
     paddingVertical: 8,
   },
-  gameTagText: {
+  gamePillText: {
     color: '#ffffff',
     fontSize: 12,
     fontWeight: '700',
