@@ -1,7 +1,6 @@
 package config
 
 import (
-	"fmt"
 	"os"
 	"strconv"
 	"strings"
@@ -13,6 +12,7 @@ type Config struct {
 	Server   ServerConfig
 	Security SecurityConfig
 	Storage  StorageConfig
+	OpenAI   OpenAIConfig
 	TTS      TTSConfig
 	Volc     VolcConfig
 }
@@ -42,6 +42,14 @@ type TTSConfig struct {
 	RequestTimeout   time.Duration
 }
 
+type OpenAIConfig struct {
+	APIKey          string
+	MaxTextLength   int
+	Model           string
+	ReasoningEffort string
+	RequestTimeout  time.Duration
+}
+
 type VolcConfig struct {
 	AccessToken string
 	AppID       string
@@ -68,6 +76,13 @@ func Load() (Config, error) {
 		Storage: StorageConfig{
 			AudioDir: envFirst("STORAGE_AUDIO_DIR", "VOICE_OUTPUT_DIR", "voice"),
 		},
+		OpenAI: OpenAIConfig{
+			APIKey:          envFirst("OPENAI_API_KEY", ""),
+			MaxTextLength:   intFirst("TRANSLATION_MAX_TEXT_LENGTH", "", "8000"),
+			Model:           envFirst("OPENAI_TRANSLATION_MODEL", "gpt-5.4"),
+			ReasoningEffort: envFirst("OPENAI_REASONING_EFFORT", "low"),
+			RequestTimeout:  durationFromMs("OPENAI_REQUEST_TIMEOUT_MS", "", "120000"),
+		},
 		TTS: TTSConfig{
 			MaxContextLength: intFirst("TTS_MAX_CONTEXT_LENGTH", "VOICE_MAX_CONTEXT_LENGTH", "1000"),
 			MaxTextLength:    intFirst("TTS_MAX_TEXT_LENGTH", "VOICE_MAX_TEXT_LENGTH", "5000"),
@@ -82,14 +97,6 @@ func Load() (Config, error) {
 			),
 			ResourceID: envFirst("VOLC_RESOURCE_ID", ""),
 		},
-	}
-
-	if cfg.Volc.AppID == "" {
-		return Config{}, fmt.Errorf("VOLC_APP_ID is required")
-	}
-
-	if cfg.Volc.AccessToken == "" {
-		return Config{}, fmt.Errorf("VOLC_ACCESS_TOKEN is required")
 	}
 
 	return cfg, nil
