@@ -2,6 +2,7 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { SmartTranslationToolScreen } from '@/features/tools/smart-translation-screen';
 import { TextToSpeechToolScreen } from '@/features/tools/tts-tool-screen';
 import { ThemedText } from '@/components/themed-text';
 import { getToolById } from '@/mocks/app-data';
@@ -22,6 +23,15 @@ export function ToolDetailScreen() {
       <>
         <Stack.Screen options={{ headerShown: false }} />
         <TextToSpeechToolScreen />
+      </>
+    );
+  }
+
+  if (tool?.id === 'smart-translation') {
+    return (
+      <>
+        <Stack.Screen options={{ headerShown: false }} />
+        <SmartTranslationToolScreen />
       </>
     );
   }

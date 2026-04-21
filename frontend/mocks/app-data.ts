@@ -10,9 +10,9 @@ import type {
 
 export const featuredBanner = {
   eyebrow: '今日推荐',
-  title: '把工具、游戏和成长任务装进一个轻量入口',
-  description: '先做高频刚需，再接入更好玩的体验。热门游戏区现已加入首个可玩模块。',
-  actionLabel: '查看热游',
+  title: '把工具、游戏和成长任务收进一个轻量移动入口',
+  description: '先把高频刚需能力做好，再逐步扩展更多可玩和可用的体验模块。',
+  actionLabel: '查看热门内容',
 };
 
 export const appTools: AppTool[] = [
@@ -34,7 +34,7 @@ export const appTools: AppTool[] = [
     id: 'image-cleanup',
     name: '一键抠图',
     tagline: '图片处理',
-    description: '常用素材处理入口已预留，方便后续继续接入图像能力。',
+    description: '常用素材处理入口已预留，便于后续继续接入图像能力。',
     icon: 'image-filter-center-focus',
     category: '多媒体',
     route: '/tools/image-cleanup',
@@ -47,21 +47,22 @@ export const appTools: AppTool[] = [
   {
     id: 'smart-translation',
     name: '智能翻译',
-    tagline: '多语言支持',
-    description: '适合商品描述、社媒短文和客服话术的快速翻译。',
+    tagline: 'AI 语境增强翻译',
+    description: '支持自动识别、场景和风格控制、多版本输出、翻译解释与历史记录的语言工作台。',
     icon: 'translate',
     category: 'AI',
     route: '/tools/smart-translation',
     accentColor: '#1f7b63',
-    badges: ['多语言'],
-    usageLabel: '查看规划',
-    status: 'coming-soon',
+    badges: ['多语言', 'MVP'],
+    usageLabel: '进入工作台',
+    status: 'available',
+    featured: true,
   },
   {
     id: 'focus-plan',
     name: '效率清单',
     tagline: '任务管理',
-    description: '用于沉淀任务编排、每日目标和连续打卡能力。',
+    description: '用于承接任务编排、每日目标和持续打卡等效率能力。',
     icon: 'clipboard-check-outline',
     category: '效率',
     route: '/tools/focus-plan',
@@ -81,11 +82,11 @@ export const recentActivities: RecentActivity[] = [
     toolId: 'text-to-speech',
   },
   {
-    id: 'recent-game',
-    title: '贪吃蛇大作战',
-    type: '游戏',
-    actionLabel: '继续挑战',
-    gameId: 'snake-brawl',
+    id: 'recent-translation',
+    title: '智能翻译工作台',
+    type: '工具',
+    actionLabel: '继续翻译',
+    toolId: 'smart-translation',
   },
 ];
 
@@ -95,7 +96,7 @@ export const popularGames: GameItem[] = [
     name: '贪吃蛇大作战',
     genre: '休闲街机',
     tag: '可玩',
-    description: '经典、无尽、闯关三种模式，支持方向键与移动端按键控制。',
+    description: '经典、无尽、闯关三种模式，支持方向键和移动端按键控制。',
     accentColor: '#20c997',
     route: '/games/snake-brawl',
     status: 'playable',
@@ -105,7 +106,7 @@ export const popularGames: GameItem[] = [
     name: '脑力挑战',
     genre: '益智闯关',
     tag: '新游',
-    description: '拼图与记忆玩法原型位，后续可扩展成关卡型轻游戏。',
+    description: '拼图和记忆玩法原型位，后续可扩展成关卡型轻游戏。',
     accentColor: '#ff8a5b',
     route: '/games/brain-challenge',
     status: 'coming-soon',
@@ -150,7 +151,7 @@ export const profile = {
   ] satisfies ProfileMenuItem[],
   growthTask: {
     title: '成长任务',
-    description: '连续签到 3 天，再领 50 积分。',
+    description: '连续签到 3 天，可再领取 50 积分。',
     actionLabel: '去完成',
   },
 };

@@ -13,25 +13,30 @@ import (
 	"strings"
 
 	"my-first-expo-app/backend/internal/config"
+	"my-first-expo-app/backend/internal/translation"
 	"my-first-expo-app/backend/internal/tts"
 )
 
 type Server struct {
-	cfg        config.Config
-	rateLimiter *RateLimiter
-	ttsService *tts.Service
+	cfg                config.Config
+	rateLimiter        *RateLimiter
+	translationService *translation.Service
+	ttsService         *tts.Service
 }
 
-func NewServer(cfg config.Config, ttsService *tts.Service) *http.Server {
+func NewServer(cfg config.Config, ttsService *tts.Service, translationService *translation.Service) *http.Server {
 	api := &Server{
-		cfg:         cfg,
-		rateLimiter: NewRateLimiter(cfg.Security.RateLimitWindow, cfg.Security.RateLimitMax),
-		ttsService:  ttsService,
+		cfg:                cfg,
+		rateLimiter:        NewRateLimiter(cfg.Security.RateLimitWindow, cfg.Security.RateLimitMax),
+		translationService: translationService,
+		ttsService:         ttsService,
 	}
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /healthz", api.handleHealthz)
 	mux.HandleFunc("GET /api/v1/system/ping", api.handlePing)
+	mux.HandleFunc("POST /api/v1/translation/translate", api.withTextPipeline(api.handleTranslate))
+	mux.HandleFunc("POST /api/translate", api.withTextPipeline(api.handleTranslate))
 	mux.HandleFunc("POST /api/v1/tts/synthesize", api.withTTSPipeline(api.handleSynthesize))
 	mux.HandleFunc("POST /api/synthesize", api.withTTSPipeline(api.handleSynthesize))
 	mux.HandleFunc("GET /voice/", api.handleServeAudio)
@@ -43,6 +48,29 @@ func NewServer(cfg config.Config, ttsService *tts.Service) *http.Server {
 		Handler:      handler,
 		ReadTimeout:  cfg.Server.ReadTimeout,
 		WriteTimeout: cfg.Server.WriteTimeout,
+	}
+}
+
+func (s *Server) withTextPipeline(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if !s.allowOrigin(r) {
+			writeJSON(w, http.StatusForbidden, map[string]any{
+				"error": "origin_not_allowed",
+			})
+			return
+		}
+
+		clientIP := clientIPFromRequest(r)
+		if retryAfter, limited := s.rateLimiter.Allow(clientIP); limited {
+			writeJSON(w, http.StatusTooManyRequests, map[string]any{
+				"error":             "rate_limited",
+				"retryAfterSeconds": retryAfter,
+			})
+			return
+		}
+
+		r.Body = http.MaxBytesReader(w, r.Body, s.cfg.Security.MaxRequestBodyBytes)
+		next.ServeHTTP(w, r)
 	}
 }
 
@@ -103,7 +131,52 @@ func (s *Server) handlePing(w http.ResponseWriter, _ *http.Request) {
 	})
 }
 
+func (s *Server) handleTranslate(w http.ResponseWriter, r *http.Request) {
+	if s.translationService == nil {
+		writeJSON(w, http.StatusServiceUnavailable, map[string]any{
+			"error":  "translation_not_configured",
+			"detail": "OPENAI_API_KEY is not configured on the backend",
+		})
+		return
+	}
+
+	var request translation.TranslateRequest
+	if err := decodeJSONBody(r, &request); err != nil {
+		statusCode := http.StatusBadRequest
+		if errors.Is(err, ErrRequestTooLarge) {
+			statusCode = http.StatusRequestEntityTooLarge
+		}
+		writeJSON(w, statusCode, map[string]any{
+			"error":  "invalid_request_body",
+			"detail": err.Error(),
+		})
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(r.Context(), s.cfg.OpenAI.RequestTimeout)
+	defer cancel()
+
+	result, err := s.translationService.Translate(ctx, request)
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]any{
+			"error":  "translate_failed",
+			"detail": err.Error(),
+		})
+		return
+	}
+
+	writeJSON(w, http.StatusOK, result)
+}
+
 func (s *Server) handleSynthesize(w http.ResponseWriter, r *http.Request) {
+	if s.ttsService == nil {
+		writeJSON(w, http.StatusServiceUnavailable, map[string]any{
+			"error":  "tts_not_configured",
+			"detail": "VOLC_APP_ID or VOLC_ACCESS_TOKEN is not configured on the backend",
+		})
+		return
+	}
+
 	var request tts.SynthesizeRequest
 
 	if err := decodeJSONBody(r, &request); err != nil {

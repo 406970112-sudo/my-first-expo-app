@@ -14,6 +14,7 @@ import (
 
 	"my-first-expo-app/backend/internal/config"
 	httpapi "my-first-expo-app/backend/internal/httpapi"
+	"my-first-expo-app/backend/internal/translation"
 	"my-first-expo-app/backend/internal/tts"
 )
 
@@ -25,10 +26,22 @@ func main() {
 		log.Fatalf("load config failed: %v", err)
 	}
 
-	ttsProvider := tts.NewVolcEngineProvider(cfg.Volc)
-	ttsService := tts.NewService(cfg, ttsProvider)
+	var ttsService *tts.Service
+	if cfg.Volc.AppID != "" && cfg.Volc.AccessToken != "" {
+		ttsProvider := tts.NewVolcEngineProvider(cfg.Volc)
+		ttsService = tts.NewService(cfg, ttsProvider)
+	} else {
+		log.Printf("tts disabled: missing VOLC_APP_ID or VOLC_ACCESS_TOKEN")
+	}
 
-	server := httpapi.NewServer(cfg, ttsService)
+	var translationService *translation.Service
+	if cfg.OpenAI.APIKey != "" {
+		translationService = translation.NewService(cfg.OpenAI)
+	} else {
+		log.Printf("translation disabled: missing OPENAI_API_KEY")
+	}
+
+	server := httpapi.NewServer(cfg, ttsService, translationService)
 
 	go func() {
 		log.Printf("backend listening on %s", server.Addr)
