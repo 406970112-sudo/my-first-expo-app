@@ -5,13 +5,14 @@ export type AppIconName = ComponentProps<typeof MaterialCommunityIcons>['name'];
 
 export type ToolId =
   | 'text-to-speech'
+  | 'live-stream-capture'
   | 'image-cleanup'
   | 'smart-translation'
   | 'focus-plan';
 
 export type GameId = 'snake-brawl' | 'brain-challenge' | 'speed-racer';
 
-export type ToolCategory = 'AI' | '音频' | '效率' | '多媒体';
+export type ToolCategory = 'AI' | '音频' | '效率' | '多媒体' | '直播';
 export type ToolStatus = 'available' | 'coming-soon';
 export type GameStatus = 'playable' | 'coming-soon';
 

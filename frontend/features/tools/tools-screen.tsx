@@ -26,7 +26,9 @@ export function ToolsScreen() {
       <SurfaceCard style={styles.summaryCard}>
         <View style={styles.summaryHeader}>
           <ThemedText style={styles.summaryTitle}>本周活跃工具</ThemedText>
-          <ThemedText style={[styles.summaryMeta, { color: colors.accent }]}>4 个模块</ThemedText>
+          <ThemedText style={[styles.summaryMeta, { color: colors.accent }]}>
+            {appTools.length} 个模块
+          </ThemedText>
         </View>
         <ThemedText style={[styles.summaryBody, { color: colors.mutedText }]}>
           工具页负责承接热门能力、沉淀详情路由，并让后续能力接入保持同一套视觉和交互结构。

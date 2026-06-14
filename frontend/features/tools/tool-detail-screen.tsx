@@ -3,6 +3,7 @@ import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { TextToSpeechToolScreen } from '@/features/tools/tts-tool-screen';
+import { LiveStreamCaptureScreen } from '@/features/tools/live-stream-capture-screen';
 import { ThemedText } from '@/components/themed-text';
 import { getToolById } from '@/mocks/app-data';
 import { useAppTheme } from '@/hooks/use-app-theme';
@@ -22,6 +23,15 @@ export function ToolDetailScreen() {
       <>
         <Stack.Screen options={{ headerShown: false }} />
         <TextToSpeechToolScreen />
+      </>
+    );
+  }
+
+  if (tool?.id === 'live-stream-capture') {
+    return (
+      <>
+        <Stack.Screen options={{ headerShown: false }} />
+        <LiveStreamCaptureScreen />
       </>
     );
   }
