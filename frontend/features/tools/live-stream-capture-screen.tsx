@@ -1,7 +1,8 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useRouter } from 'expo-router';
 import {
-  createLocalTracks,
+  createLocalAudioTrack,
+  createLocalVideoTrack,
   LocalAudioTrack,
   LocalVideoTrack,
   type LocalTrack,
@@ -17,20 +18,52 @@ import { SurfaceCard } from '@/shared/ui/surface-card';
 
 type CaptureMode = 'audio-video' | 'audio-only';
 
+type CaptureEnvironment = {
+  cameraAllowed: boolean;
+  hasGetUserMedia: boolean;
+  isEmbedded: boolean;
+  isSecureContext: boolean;
+  isWeChat: boolean;
+  microphoneAllowed: boolean;
+};
+
+type BrowserPermissionsPolicy = {
+  allowsFeature(feature: string): boolean;
+};
+
 function getCaptureEnvironment() {
   if (typeof window === 'undefined' || typeof navigator === 'undefined') {
-    return { hasGetUserMedia: false, isSecureContext: false, isWeChat: false };
+    return {
+      cameraAllowed: false,
+      hasGetUserMedia: false,
+      isEmbedded: false,
+      isSecureContext: false,
+      isWeChat: false,
+      microphoneAllowed: false,
+    } satisfies CaptureEnvironment;
   }
 
   const userAgent = navigator.userAgent.toLowerCase();
+  const policyDocument = document as Document & {
+    featurePolicy?: BrowserPermissionsPolicy;
+    permissionsPolicy?: BrowserPermissionsPolicy;
+  };
+  const policy = policyDocument.permissionsPolicy ?? policyDocument.featurePolicy;
   const isWeChat = userAgent.includes('micromessenger');
   const isSecureContext = window.isSecureContext;
   const hasGetUserMedia = Boolean(navigator.mediaDevices?.getUserMedia);
 
-  return { hasGetUserMedia, isSecureContext, isWeChat };
+  return {
+    cameraAllowed: policy?.allowsFeature('camera') ?? true,
+    hasGetUserMedia,
+    isEmbedded: window.self !== window.top,
+    isSecureContext,
+    isWeChat,
+    microphoneAllowed: policy?.allowsFeature('microphone') ?? true,
+  } satisfies CaptureEnvironment;
 }
 
-function getUnavailableMessage() {
+function getUnavailableMessage(mode: CaptureMode) {
   const environment = getCaptureEnvironment();
 
   if (!environment.isSecureContext) {
@@ -43,7 +76,42 @@ function getUnavailableMessage() {
       : '当前浏览器不支持网页音视频采集。';
   }
 
+  if (!environment.microphoneAllowed) {
+    return '当前 WebView 的 Permissions Policy 禁止麦克风访问，需要宿主允许 microphone。';
+  }
+
+  if (mode === 'audio-video' && !environment.cameraAllowed) {
+    return '当前 WebView 的 Permissions Policy 禁止摄像头访问，需要宿主允许 camera。';
+  }
+
   return null;
+}
+
+function getCaptureErrorMessage(error: unknown, source: 'camera' | 'microphone') {
+  const environment = getCaptureEnvironment();
+  const name = error instanceof DOMException ? error.name : '';
+  const sourceLabel = source === 'camera' ? '摄像头' : '麦克风';
+
+  if (name === 'NotAllowedError' || name === 'PermissionDeniedError') {
+    return environment.isWeChat
+      ? `${sourceLabel}权限被微信 WebView 或系统拒绝。请确认页面使用 HTTPS，并在系统设置中允许微信访问${sourceLabel}。`
+      : `${sourceLabel}权限被拒绝，请在浏览器设置中允许后重试。`;
+  }
+
+  if (name === 'NotFoundError' || name === 'DevicesNotFoundError') {
+    return `没有检测到可用的${sourceLabel}设备。`;
+  }
+
+  if (name === 'NotReadableError' || name === 'TrackStartError') {
+    return `${sourceLabel}可能正被其它页面或应用占用，请关闭占用后重试。`;
+  }
+
+  if (name === 'OverconstrainedError') {
+    return `${sourceLabel}不支持当前采集参数，请更换设备后重试。`;
+  }
+
+  const detail = error instanceof Error ? error.message : `无法访问${sourceLabel}`;
+  return `${sourceLabel}采集失败：${detail}`;
 }
 
 export function LiveStreamCaptureScreen() {
@@ -57,6 +125,7 @@ export function LiveStreamCaptureScreen() {
   const [capturing, setCapturing] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('尚未采集，不会连接房间或向服务器推流。');
+  const environment = getCaptureEnvironment();
 
   function stopTracks() {
     tracksRef.current.forEach((track) => track.stop());
@@ -67,7 +136,7 @@ export function LiveStreamCaptureScreen() {
   }
 
   async function startCapture(nextMode = mode) {
-    const unavailableMessage = getUnavailableMessage();
+    const unavailableMessage = getUnavailableMessage(nextMode);
     if (unavailableMessage) {
       setMessage(unavailableMessage);
       return;
@@ -76,29 +145,36 @@ export function LiveStreamCaptureScreen() {
     setBusy(true);
     setMessage('正在请求设备权限并创建 LiveKit 本地轨道...');
     stopTracks();
+
+    const nextTracks: LocalTrack[] = [];
+
     try {
-      const tracks = await createLocalTracks({ audio: true, video: nextMode === 'audio-video' });
-      const nextVideo =
-        tracks.find((track): track is LocalVideoTrack => track instanceof LocalVideoTrack) ?? null;
-      tracksRef.current = tracks;
-      setVideoTrack(nextVideo);
-      setAudioActive(tracks.some((track) => track instanceof LocalAudioTrack));
+      try {
+        setMessage('正在请求麦克风权限...');
+        nextTracks.push(await createLocalAudioTrack());
+      } catch (error) {
+        throw new Error(getCaptureErrorMessage(error, 'microphone'));
+      }
+
+      if (nextMode === 'audio-video') {
+        try {
+          setMessage('麦克风已就绪，正在请求摄像头权限...');
+          nextTracks.push(await createLocalVideoTrack({ facingMode: 'user' }));
+        } catch (error) {
+          throw new Error(getCaptureErrorMessage(error, 'camera'));
+        }
+      }
+
+      tracksRef.current = nextTracks;
+      setVideoTrack(
+        nextTracks.find((track): track is LocalVideoTrack => track instanceof LocalVideoTrack) ?? null
+      );
+      setAudioActive(nextTracks.some((track) => track instanceof LocalAudioTrack));
       setCapturing(true);
       setMessage(nextMode === 'audio-video' ? '正在采集摄像头与麦克风。' : '正在仅采集麦克风。');
     } catch (error) {
-      const errorName = error instanceof DOMException ? error.name : '';
-      const detail = error instanceof Error ? error.message : '无法访问摄像头或麦克风';
-      const isWeChat = getCaptureEnvironment().isWeChat;
-
-      if (errorName === 'NotAllowedError' || errorName === 'PermissionDeniedError') {
-        setMessage(
-          isWeChat
-            ? '微信或系统拒绝了摄像头/麦克风权限。请在系统设置中允许微信访问；若仍失败，当前微信 WebView 不支持 LiveKit WebRTC 采集。'
-            : '摄像头或麦克风权限被拒绝，请在浏览器设置中允许后重试。'
-        );
-      } else {
-        setMessage(`采集失败：${detail}`);
-      }
+      nextTracks.forEach((track) => track.stop());
+      setMessage(error instanceof Error ? error.message : '音视频采集失败。');
     } finally {
       setBusy(false);
     }
@@ -177,9 +253,14 @@ export function LiveStreamCaptureScreen() {
           <ThemedText>麦克风：{audioActive ? '已采集' : '未采集'}</ThemedText>
           <ThemedText>摄像头：{videoTrack ? '已采集' : '未采集'}</ThemedText>
           <ThemedText style={{ color: colors.mutedText, fontSize: 12, lineHeight: 18 }}>{message}</ThemedText>
-          {getCaptureEnvironment().isWeChat ? (
+          {environment.isWeChat ? (
             <ThemedText style={{ color: colors.accent, fontSize: 12, lineHeight: 18 }}>
-              已识别微信 WebView。权限由微信与系统共同控制，页面无法直接调用 X5 原生授权接口。
+              已识别微信 WebView，将使用标准 WebRTC 权限和 LiveKit 本地轨道采集。
+            </ThemedText>
+          ) : null}
+          {environment.isEmbedded ? (
+            <ThemedText style={{ color: colors.accent, fontSize: 12, lineHeight: 18 }}>
+              当前页面处于嵌入式 WebView；宿主必须允许 camera 和 microphone 权限策略。
             </ThemedText>
           ) : null}
         </View>
