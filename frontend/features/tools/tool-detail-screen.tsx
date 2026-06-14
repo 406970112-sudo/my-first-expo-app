@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { SmartTranslationToolScreen } from '@/features/tools/smart-translation-screen';
 import { TextToSpeechToolScreen } from '@/features/tools/tts-tool-screen';
+import { LiveStreamCaptureScreen } from '@/features/tools/live-stream-capture-screen';
 import { ThemedText } from '@/components/themed-text';
 import { getToolById } from '@/mocks/app-data';
 import { useAppTheme } from '@/hooks/use-app-theme';
@@ -32,6 +33,15 @@ export function ToolDetailScreen() {
       <>
         <Stack.Screen options={{ headerShown: false }} />
         <SmartTranslationToolScreen />
+      </>
+    );
+  }
+
+  if (tool?.id === 'live-stream-capture') {
+    return (
+      <>
+        <Stack.Screen options={{ headerShown: false }} />
+        <LiveStreamCaptureScreen />
       </>
     );
   }

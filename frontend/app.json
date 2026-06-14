@@ -9,9 +9,17 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "用于采集直播画面",
+        "NSMicrophoneUsageDescription": "用于采集直播声音"
+      }
     },
     "android": {
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ],
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -27,6 +35,8 @@
     },
     "plugins": [
       "expo-router",
+      "@livekit/react-native-expo-plugin",
+      "@config-plugins/react-native-webrtc",
       [
         "expo-splash-screen",
         {

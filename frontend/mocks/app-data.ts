@@ -17,6 +17,20 @@ export const featuredBanner = {
 
 export const appTools: AppTool[] = [
   {
+    id: 'live-stream-capture',
+    name: '音视频推流',
+    tagline: 'LiveKit 本地采集',
+    description: '使用 LiveKit 采集摄像头和麦克风，可在音视频与仅音频模式之间切换。',
+    icon: 'broadcast',
+    category: '直播',
+    route: '/tools/live-stream-capture',
+    accentColor: '#ef5b72',
+    badges: ['LiveKit', '可采集'],
+    usageLabel: '开始采集',
+    status: 'available',
+    featured: true,
+  },
+  {
     id: 'text-to-speech',
     name: '文字转语音',
     tagline: '现有能力已接入',
