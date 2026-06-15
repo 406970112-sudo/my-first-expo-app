@@ -131,3 +131,17 @@ curl -I http://127.0.0.1/tools/live-stream-capture
 ```bash
 sudo BRANCH=your-branch bash /srv/my-first-expo-app/deploy/alicloud/ubuntu-22.04/update-server.sh
 ```
+
+## GitHub Actions 自动更新
+
+仓库中的 `.github/workflows/deploy-main.yml` 会在代码推送到 `main` 后自动连接云服务器，并执行日常更新脚本。也可以在 GitHub 仓库的 Actions 页面手动触发。
+
+在 GitHub 仓库的 `Settings > Secrets and variables > Actions` 中添加以下 Repository secrets：
+
+- `DEPLOY_HOST`：云服务器公网 IP 或域名。
+- `DEPLOY_PORT`：SSH 端口，通常为 `22`。
+- `DEPLOY_USER`：用于部署的 SSH 用户。
+- `DEPLOY_SSH_KEY`：部署用户对应的 SSH 私钥全文。
+- `DEPLOY_KNOWN_HOSTS`：服务器 SSH 主机公钥记录，可在可信终端执行 `ssh-keyscan -H 服务器公网IP` 获取。
+
+部署用户必须能够免密执行更新脚本需要的 `sudo` 命令。工作流会先快进更新服务器仓库，确保首次自动部署时也能获取最新的 `update-server.sh`。
