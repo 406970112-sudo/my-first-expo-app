@@ -20,18 +20,69 @@ type CaptureMode = 'audio-video' | 'audio-only';
 
 type CaptureEnvironment = {
   cameraAllowed: boolean;
+  getUserMediaApi: 'legacy' | 'none' | 'standard';
   hasGetUserMedia: boolean;
   isEmbedded: boolean;
   isSecureContext: boolean;
   isWeChat: boolean;
+  isX5: boolean;
   microphoneAllowed: boolean;
+  protocol: string;
 };
 
 type BrowserPermissionsPolicy = {
   allowsFeature(feature: string): boolean;
 };
 
+type LegacyGetUserMedia = (
+  constraints: MediaStreamConstraints,
+  onSuccess: (stream: MediaStream) => void,
+  onError: (error: DOMException) => void
+) => void;
+
+type LegacyNavigator = Navigator & {
+  getUserMedia?: LegacyGetUserMedia;
+  mozGetUserMedia?: LegacyGetUserMedia;
+  webkitGetUserMedia?: LegacyGetUserMedia;
+};
+
 const PERMISSION_TIMEOUT_MS = 15_000;
+
+function installLegacyGetUserMediaAdapter() {
+  const legacyNavigator = navigator as LegacyNavigator;
+
+  if (legacyNavigator.mediaDevices?.getUserMedia) return 'standard' as const;
+
+  const legacyGetUserMedia =
+    legacyNavigator.getUserMedia ??
+    legacyNavigator.webkitGetUserMedia ??
+    legacyNavigator.mozGetUserMedia;
+
+  if (!legacyGetUserMedia) return 'none' as const;
+
+  const mediaDevices = legacyNavigator.mediaDevices ?? {};
+  const getUserMedia = (constraints: MediaStreamConstraints) =>
+    new Promise<MediaStream>((resolve, reject) => {
+      legacyGetUserMedia.call(legacyNavigator, constraints, resolve, reject);
+    });
+
+  try {
+    if (!legacyNavigator.mediaDevices) {
+      Object.defineProperty(legacyNavigator, 'mediaDevices', {
+        configurable: true,
+        value: mediaDevices,
+      });
+    }
+    Object.defineProperty(mediaDevices, 'getUserMedia', {
+      configurable: true,
+      value: getUserMedia,
+    });
+  } catch {
+    return 'none' as const;
+  }
+
+  return 'legacy' as const;
+}
 
 async function withPermissionTimeout<T>(promise: Promise<T>, source: 'camera' | 'microphone') {
   let timeoutId: number | undefined;
@@ -54,38 +105,46 @@ function getCaptureEnvironment() {
   if (typeof window === 'undefined' || typeof navigator === 'undefined') {
     return {
       cameraAllowed: false,
+      getUserMediaApi: 'none',
       hasGetUserMedia: false,
       isEmbedded: false,
       isSecureContext: false,
       isWeChat: false,
+      isX5: false,
       microphoneAllowed: false,
+      protocol: '',
     } satisfies CaptureEnvironment;
   }
 
   const userAgent = navigator.userAgent.toLowerCase();
+  const getUserMediaApi = installLegacyGetUserMediaAdapter();
   const policyDocument = document as Document & {
     featurePolicy?: BrowserPermissionsPolicy;
     permissionsPolicy?: BrowserPermissionsPolicy;
   };
   const policy = policyDocument.permissionsPolicy ?? policyDocument.featurePolicy;
   const isWeChat = userAgent.includes('micromessenger');
+  const isX5 = userAgent.includes('tbs/') || userAgent.includes('mqqbrowser');
   const isSecureContext = window.isSecureContext;
-  const hasGetUserMedia = Boolean(navigator.mediaDevices?.getUserMedia);
+  const hasGetUserMedia = getUserMediaApi !== 'none';
 
   return {
     cameraAllowed: policy?.allowsFeature('camera') ?? true,
+    getUserMediaApi,
     hasGetUserMedia,
     isEmbedded: window.self !== window.top,
     isSecureContext,
     isWeChat,
+    isX5,
     microphoneAllowed: policy?.allowsFeature('microphone') ?? true,
+    protocol: window.location.protocol,
   } satisfies CaptureEnvironment;
 }
 
 function getUnavailableMessage(mode: CaptureMode) {
   const environment = getCaptureEnvironment();
 
-  if (!environment.isSecureContext) {
+  if (!environment.isSecureContext && environment.getUserMediaApi !== 'legacy') {
     return '当前页面不是 HTTPS 安全上下文，无法申请摄像头和麦克风权限。';
   }
 
@@ -301,6 +360,21 @@ export function LiveStreamCaptureScreen() {
         <View style={[styles.statusBox, { backgroundColor: colors.surfaceMuted }]}>
           <ThemedText>麦克风：{audioActive ? '已采集' : '未采集'}</ThemedText>
           <ThemedText>摄像头：{videoTrack ? '已采集' : '未采集'}</ThemedText>
+          <ThemedText>
+            页面环境：{environment.protocol || '未知协议'} / {environment.isSecureContext ? '安全上下文' : '非安全上下文'}
+          </ThemedText>
+          <ThemedText>
+            WebRTC 接口：
+            {environment.getUserMediaApi === 'standard'
+              ? '标准 mediaDevices.getUserMedia'
+              : environment.getUserMediaApi === 'legacy'
+                ? 'X5/旧 WebView 兼容接口'
+                : '不可用'}
+          </ThemedText>
+          <ThemedText>
+            宿主识别：{environment.isWeChat ? '微信 WebView' : '普通浏览器'}
+            {environment.isX5 ? ' / X5 内核' : ''}
+          </ThemedText>
           <ThemedText style={{ color: colors.mutedText, fontSize: 12, lineHeight: 18 }}>{message}</ThemedText>
           {environment.isWeChat ? (
             <ThemedText style={{ color: colors.accent, fontSize: 12, lineHeight: 18 }}>
@@ -310,6 +384,11 @@ export function LiveStreamCaptureScreen() {
           {environment.isEmbedded ? (
             <ThemedText style={{ color: colors.accent, fontSize: 12, lineHeight: 18 }}>
               当前页面处于嵌入式 WebView；宿主必须允许 camera 和 microphone 权限策略。
+            </ThemedText>
+          ) : null}
+          {!environment.isSecureContext && environment.getUserMediaApi === 'legacy' ? (
+            <ThemedText style={{ color: colors.accent, fontSize: 12, lineHeight: 18 }}>
+              检测到旧 X5 WebRTC 接口，将尝试申请权限；该兼容路径能否弹窗由当前微信/X5 版本决定。
             </ThemedText>
           ) : null}
         </View>
