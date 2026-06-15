@@ -31,6 +31,25 @@ type BrowserPermissionsPolicy = {
   allowsFeature(feature: string): boolean;
 };
 
+const PERMISSION_TIMEOUT_MS = 15_000;
+
+async function withPermissionTimeout<T>(promise: Promise<T>, source: 'camera' | 'microphone') {
+  let timeoutId: number | undefined;
+
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<never>((_, reject) => {
+        timeoutId = window.setTimeout(() => {
+          reject(new DOMException(`${source} permission request timed out`, 'PermissionRequestTimeout'));
+        }, PERMISSION_TIMEOUT_MS);
+      }),
+    ]);
+  } finally {
+    if (timeoutId !== undefined) window.clearTimeout(timeoutId);
+  }
+}
+
 function getCaptureEnvironment() {
   if (typeof window === 'undefined' || typeof navigator === 'undefined') {
     return {
@@ -98,6 +117,10 @@ function getCaptureErrorMessage(error: unknown, source: 'camera' | 'microphone')
       : `${sourceLabel}权限被拒绝，请在浏览器设置中允许后重试。`;
   }
 
+  if (name === 'PermissionRequestTimeout') {
+    return `${sourceLabel}权限请求超过 15 秒未响应。微信 WebView 没有向 H5 返回授权结果，请检查微信的系统权限后重试。`;
+  }
+
   if (name === 'NotFoundError' || name === 'DevicesNotFoundError') {
     return `没有检测到可用的${sourceLabel}设备。`;
   }
@@ -127,6 +150,21 @@ export function LiveStreamCaptureScreen() {
   const [message, setMessage] = useState('尚未采集，不会连接房间或向服务器推流。');
   const environment = getCaptureEnvironment();
 
+  async function createCameraTrack() {
+    try {
+      return await withPermissionTimeout(createLocalVideoTrack({ facingMode: 'user' }), 'camera');
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'OverconstrainedError') {
+        return withPermissionTimeout(createLocalVideoTrack(), 'camera');
+      }
+      throw error;
+    }
+  }
+
+  async function createMicrophoneTrack() {
+    return withPermissionTimeout(createLocalAudioTrack(), 'microphone');
+  }
+
   function stopTracks() {
     tracksRef.current.forEach((track) => track.stop());
     tracksRef.current = [];
@@ -147,22 +185,33 @@ export function LiveStreamCaptureScreen() {
     stopTracks();
 
     const nextTracks: LocalTrack[] = [];
+    const captureMessages: string[] = [];
 
     try {
-      try {
-        setMessage('正在请求麦克风权限...');
-        nextTracks.push(await createLocalAudioTrack());
-      } catch (error) {
-        throw new Error(getCaptureErrorMessage(error, 'microphone'));
-      }
-
       if (nextMode === 'audio-video') {
         try {
-          setMessage('麦克风已就绪，正在请求摄像头权限...');
-          nextTracks.push(await createLocalVideoTrack({ facingMode: 'user' }));
+          setMessage('正在请求摄像头权限...');
+          nextTracks.push(await createCameraTrack());
+          captureMessages.push('摄像头已就绪');
         } catch (error) {
-          throw new Error(getCaptureErrorMessage(error, 'camera'));
+          captureMessages.push(getCaptureErrorMessage(error, 'camera'));
         }
+      }
+
+      try {
+        setMessage(
+          nextMode === 'audio-video'
+            ? '摄像头权限请求已完成，正在请求麦克风权限...'
+            : '正在请求麦克风权限...'
+        );
+        nextTracks.push(await createMicrophoneTrack());
+        captureMessages.push('麦克风已就绪');
+      } catch (error) {
+        captureMessages.push(getCaptureErrorMessage(error, 'microphone'));
+      }
+
+      if (nextTracks.length === 0) {
+        throw new Error(captureMessages.join('；'));
       }
 
       tracksRef.current = nextTracks;
@@ -171,7 +220,7 @@ export function LiveStreamCaptureScreen() {
       );
       setAudioActive(nextTracks.some((track) => track instanceof LocalAudioTrack));
       setCapturing(true);
-      setMessage(nextMode === 'audio-video' ? '正在采集摄像头与麦克风。' : '正在仅采集麦克风。');
+      setMessage(captureMessages.join('；'));
     } catch (error) {
       nextTracks.forEach((track) => track.stop());
       setMessage(error instanceof Error ? error.message : '音视频采集失败。');
@@ -255,7 +304,7 @@ export function LiveStreamCaptureScreen() {
           <ThemedText style={{ color: colors.mutedText, fontSize: 12, lineHeight: 18 }}>{message}</ThemedText>
           {environment.isWeChat ? (
             <ThemedText style={{ color: colors.accent, fontSize: 12, lineHeight: 18 }}>
-              已识别微信 WebView，将使用标准 WebRTC 权限和 LiveKit 本地轨道采集。
+              已识别微信 WebView。点击开始采集后，H5 会先通过 LiveKit 单独申请摄像头，再申请麦克风。
             </ThemedText>
           ) : null}
           {environment.isEmbedded ? (
