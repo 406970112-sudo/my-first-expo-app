@@ -13,6 +13,8 @@
   初始化服务器环境，安装 Nginx、Node.js、Go、Certbot 等依赖。
 - `deploy-project.sh`
   拉代码、写环境变量、构建前端和后端、安装 `systemd` 与 Nginx 配置。
+- `update-server.sh`
+  日常更新脚本。保留现有环境变量与 Nginx 配置，只快进更新 `main`、构建、备份、发布并验证。
 - `templates/my-first-expo-app-backend.service`
   后端 `systemd` 模板。
 - `templates/app.example.com.conf`
@@ -94,4 +96,38 @@ sudo systemctl status nginx
 ```bash
 curl http://127.0.0.1:3000/healthz
 curl https://api.example.com/healthz
+```
+
+## 日常更新 main 分支
+
+代码合并并推送到远程 `main` 后，在云服务器执行：
+
+```bash
+sudo bash /srv/my-first-expo-app/deploy/alicloud/ubuntu-22.04/update-server.sh
+```
+
+脚本会自动：
+
+1. 检查服务器是否存在未提交的已跟踪文件改动。
+2. 使用 `git fetch` 和 `git merge --ff-only` 更新 `main`。
+3. 保留现有的 `frontend/.env`、`backend/.env` 和 Nginx 配置。
+4. 重新构建 Expo Web 前端和 Go 后端。
+5. 将当前线上前端和后端二进制备份到 `/srv/deploy-backups/`。
+6. 发布新版本、重启后端、重载 Nginx 并执行健康检查。
+7. 发布失败时自动恢复本次备份。
+
+查看最近一次发布结果：
+
+```bash
+cd /srv/my-first-expo-app
+git log -1 --oneline
+systemctl status my-first-expo-app-backend --no-pager
+curl http://127.0.0.1:3000/healthz
+curl -I http://127.0.0.1/tools/live-stream-capture
+```
+
+如需更新其它分支：
+
+```bash
+sudo BRANCH=your-branch bash /srv/my-first-expo-app/deploy/alicloud/ubuntu-22.04/update-server.sh
 ```
