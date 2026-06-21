@@ -145,3 +145,13 @@ sudo BRANCH=your-branch bash /srv/my-first-expo-app/deploy/alicloud/ubuntu-22.04
 - `DEPLOY_KNOWN_HOSTS`：服务器 SSH 主机公钥记录，可在可信终端执行 `ssh-keyscan -H 服务器公网IP` 获取。
 
 部署用户必须能够免密执行更新脚本需要的 `sudo` 命令。工作流会先快进更新服务器仓库，确保首次自动部署时也能获取最新的 `update-server.sh`。
+
+## 绑定新域名并开启 HTTPS
+
+先在 DNS 控制台将域名 A 记录解析到 ECS 公网 IP。解析生效后，在云服务器执行：
+
+```bash
+sudo bash /srv/my-first-expo-app/deploy/alicloud/ubuntu-22.04/setup-domain.sh xwhub.cn www.xwhub.cn
+```
+
+脚本会写入 Nginx 域名站点配置、保留摄像头和麦克风的 `Permissions-Policy` 响应头，并在 DNS 已指向当前 ECS 时自动使用 Certbot 签发 HTTPS 证书。
