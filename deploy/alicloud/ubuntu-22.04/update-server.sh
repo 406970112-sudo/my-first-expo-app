@@ -11,6 +11,8 @@ BACKEND_SERVICE="${BACKEND_SERVICE:-my-first-expo-app-backend}"
 GOPROXY="${GOPROXY:-https://goproxy.cn,direct}"
 NPM_REGISTRY="${NPM_REGISTRY:-https://registry.npmmirror.com}"
 FETCH_TIMEOUT_SECONDS="${FETCH_TIMEOUT_SECONDS:-120}"
+FETCH_RETRIES="${FETCH_RETRIES:-5}"
+FETCH_RETRY_DELAY_SECONDS="${FETCH_RETRY_DELAY_SECONDS:-15}"
 BACKUP_ROOT="${BACKUP_ROOT:-/srv/deploy-backups}"
 
 FRONTEND_ROOT="$APP_ROOT/frontend"
@@ -23,6 +25,23 @@ DEPLOY_STARTED=false
 
 log() {
   printf '\n[%s] %s\n' "$(date '+%F %T')" "$*"
+}
+
+retry() {
+  local attempts="$1"
+  local delay_seconds="$2"
+  shift 2
+
+  local attempt=1
+  until "$@"; do
+    if (( attempt >= attempts )); then
+      return 1
+    fi
+
+    log "Command failed. Retrying in ${delay_seconds}s (${attempt}/${attempts}): $*"
+    sleep "$delay_seconds"
+    attempt=$((attempt + 1))
+  done
 }
 
 rollback() {
@@ -72,7 +91,7 @@ if [[ -n "$(git status --porcelain --untracked-files=no)" ]]; then
 fi
 
 log "Fetching origin/$BRANCH"
-timeout "$FETCH_TIMEOUT_SECONDS" git fetch origin "$BRANCH"
+retry "$FETCH_RETRIES" "$FETCH_RETRY_DELAY_SECONDS" timeout "$FETCH_TIMEOUT_SECONDS" git fetch origin "$BRANCH"
 git checkout "$BRANCH"
 git merge --ff-only "origin/$BRANCH"
 

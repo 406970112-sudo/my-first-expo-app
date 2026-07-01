@@ -44,4 +44,4 @@ jobs:
             -o BatchMode=yes \
             -o ConnectTimeout=15 \
             "$DEPLOY_USER@$DEPLOY_HOST" \
-            "sudo -n bash -lc 'cd /srv/my-first-expo-app && git fetch origin main && git checkout main && git merge --ff-only origin/main && bash deploy/alicloud/ubuntu-22.04/update-server.sh'"
+            "sudo -n bash -lc 'cd /srv/my-first-expo-app && for attempt in 1 2 3 4 5; do timeout 120 git fetch origin main && break; if [ \"\$attempt\" = 5 ]; then exit 1; fi; echo \"git fetch failed, retrying in 15s (\$attempt/5)\"; sleep 15; done && git checkout main && git merge --ff-only origin/main && BRANCH=main bash deploy/alicloud/ubuntu-22.04/update-server.sh'"
