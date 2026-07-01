@@ -26,6 +26,7 @@ app.use(router.allowedMethods());
 
 // 启动服务器
 const PORT = process.env.PORT || 1234;
-app.listen(PORT, () => {
-  console.log(`🚀 Server running at http://localhost:${PORT}`);
+const HOST = process.env.HOST || '127.0.0.1';
+app.listen(Number(PORT), HOST, () => {
+  console.log(`🚀 Server running at http://${HOST}:${PORT}`);
 });
