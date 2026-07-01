@@ -7,6 +7,8 @@ APP_ROOT="${APP_ROOT:-/srv/my-first-expo-app}"
 APP_NAME="${APP_NAME:-my-first-expo-app}"
 APP_USER="${APP_USER:-www-data}"
 APP_GROUP="${APP_GROUP:-www-data}"
+SKIP_GIT_UPDATE="${SKIP_GIT_UPDATE:-0}"
+DEPLOY_COMMIT="${DEPLOY_COMMIT:-}"
 BACKEND_SERVICE="${BACKEND_SERVICE:-my-first-expo-app-backend}"
 BACKEND_PORT="${BACKEND_PORT:-3000}"
 EMAIL_AGENT_SERVICE="${EMAIL_AGENT_SERVICE:-my-first-expo-app-email-agent}"
@@ -176,7 +178,7 @@ if [[ "$(id -u)" -ne 0 ]]; then
   exit 1
 fi
 
-if [[ ! -d "$APP_ROOT/.git" ]]; then
+if [[ "$SKIP_GIT_UPDATE" != "1" && ! -d "$APP_ROOT/.git" ]]; then
   echo "Git repository not found at $APP_ROOT."
   exit 1
 fi
@@ -188,16 +190,20 @@ fi
 
 cd "$APP_ROOT"
 
-if [[ -n "$(git status --porcelain --untracked-files=no)" ]]; then
-  echo "Tracked server files contain local changes. Commit or restore them before deploying:"
-  git status --short --untracked-files=no
-  exit 1
-fi
+if [[ "$SKIP_GIT_UPDATE" == "1" ]]; then
+  log "Skipping git update; source was synced by deployment workflow"
+else
+  if [[ -n "$(git status --porcelain --untracked-files=no)" ]]; then
+    echo "Tracked server files contain local changes. Commit or restore them before deploying:"
+    git status --short --untracked-files=no
+    exit 1
+  fi
 
-log "Fetching origin/$BRANCH"
-retry "$FETCH_RETRIES" "$FETCH_RETRY_DELAY_SECONDS" timeout "$FETCH_TIMEOUT_SECONDS" git fetch origin "$BRANCH"
-git checkout "$BRANCH"
-git merge --ff-only "origin/$BRANCH"
+  log "Fetching origin/$BRANCH"
+  retry "$FETCH_RETRIES" "$FETCH_RETRY_DELAY_SECONDS" timeout "$FETCH_TIMEOUT_SECONDS" git fetch origin "$BRANCH"
+  git checkout "$BRANCH"
+  git merge --ff-only "origin/$BRANCH"
+fi
 
 log "Building frontend"
 pushd "$FRONTEND_ROOT" >/dev/null
@@ -254,7 +260,11 @@ DEPLOY_STARTED=false
 trap - ERR
 
 log "Deployment completed"
-echo "Commit: $(git rev-parse --short HEAD)"
+if [[ -n "$DEPLOY_COMMIT" ]]; then
+  echo "Commit: ${DEPLOY_COMMIT:0:7}"
+elif [[ -d "$APP_ROOT/.git" ]]; then
+  echo "Commit: $(git rev-parse --short HEAD)"
+fi
 echo "Backup: $BACKUP_DIR"
 echo "Frontend: $WEB_ROOT"
 echo "Backend service: $BACKEND_SERVICE"
