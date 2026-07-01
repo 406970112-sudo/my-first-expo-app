@@ -7,6 +7,8 @@ APP_USER="${APP_USER:-www-data}"
 APP_GROUP="${APP_GROUP:-www-data}"
 APP_ROOT="${APP_ROOT:-/srv/my-first-expo-app}"
 PUBLIC_IP="${PUBLIC_IP:-39.107.136.182}"
+BACKEND_PORT="${BACKEND_PORT:-3000}"
+EMAIL_AGENT_PORT="${EMAIL_AGENT_PORT:-1234}"
 PRIMARY_DOMAIN="${1:-${APP_DOMAIN:-}}"
 WWW_DOMAIN="${2:-}"
 
@@ -40,6 +42,42 @@ server {
   index index.html;
 
   add_header Permissions-Policy "camera=(self), microphone=(self)" always;
+
+  location = /api/agent {
+    proxy_pass http://127.0.0.1:$EMAIL_AGENT_PORT/api/agent;
+    proxy_http_version 1.1;
+    proxy_set_header Host \$host;
+    proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto \$scheme;
+    proxy_read_timeout 300s;
+    proxy_send_timeout 300s;
+  }
+
+  location /api/ {
+    proxy_pass http://127.0.0.1:$BACKEND_PORT/api/;
+    proxy_http_version 1.1;
+    proxy_set_header Host \$host;
+    proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto \$scheme;
+    proxy_read_timeout 300s;
+    proxy_send_timeout 300s;
+  }
+
+  location /voice/ {
+    proxy_pass http://127.0.0.1:$BACKEND_PORT/voice/;
+    proxy_http_version 1.1;
+    proxy_set_header Host \$host;
+    proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto \$scheme;
+  }
+
+  location = /healthz {
+    proxy_pass http://127.0.0.1:$BACKEND_PORT/healthz;
+    proxy_http_version 1.1;
+    proxy_set_header Host \$host;
+    proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto \$scheme;
+  }
 
   location / {
     try_files \$uri \$uri/ /index.html;
