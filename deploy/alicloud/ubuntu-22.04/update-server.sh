@@ -74,6 +74,11 @@ configure_nginx_api_proxies() {
   local configured=false
   local conf
   local tmp
+  local stripped
+  local has_agent
+  local has_api
+  local has_voice
+  local has_health
 
   shopt -s nullglob
   for conf in /etc/nginx/sites-available/*.conf; do
@@ -82,64 +87,107 @@ configure_nginx_api_proxies() {
     fi
 
     tmp="$(mktemp)"
-    awk -v backend_port="$BACKEND_PORT" -v email_port="$EMAIL_AGENT_PORT" '
-      BEGIN {
-        block = "  # BEGIN my-first-expo-app api proxies\n" \
-                "  location = /api/agent {\n" \
-                "    proxy_pass http://127.0.0.1:" email_port "/api/agent;\n" \
-                "    proxy_http_version 1.1;\n" \
-                "    proxy_set_header Host $host;\n" \
-                "    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n" \
-                "    proxy_set_header X-Forwarded-Proto $scheme;\n" \
-                "    proxy_read_timeout 300s;\n" \
-                "    proxy_send_timeout 300s;\n" \
-                "  }\n" \
-                "\n" \
-                "  location /api/ {\n" \
-                "    proxy_pass http://127.0.0.1:" backend_port "/api/;\n" \
-                "    proxy_http_version 1.1;\n" \
-                "    proxy_set_header Host $host;\n" \
-                "    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n" \
-                "    proxy_set_header X-Forwarded-Proto $scheme;\n" \
-                "    proxy_read_timeout 300s;\n" \
-                "    proxy_send_timeout 300s;\n" \
-                "  }\n" \
-                "\n" \
-                "  location /voice/ {\n" \
-                "    proxy_pass http://127.0.0.1:" backend_port "/voice/;\n" \
-                "    proxy_http_version 1.1;\n" \
-                "    proxy_set_header Host $host;\n" \
-                "    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n" \
-                "    proxy_set_header X-Forwarded-Proto $scheme;\n" \
-                "  }\n" \
-                "\n" \
-                "  location = /healthz {\n" \
-                "    proxy_pass http://127.0.0.1:" backend_port "/healthz;\n" \
-                "    proxy_http_version 1.1;\n" \
-                "    proxy_set_header Host $host;\n" \
-                "    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n" \
-                "    proxy_set_header X-Forwarded-Proto $scheme;\n" \
-                "  }\n" \
-                "  # END my-first-expo-app api proxies\n"
-      }
+    stripped="$(mktemp)"
+    awk '
       /# BEGIN my-first-expo-app email agent/ { skip = 1; next }
       /# END my-first-expo-app email agent/ { skip = 0; next }
       /# BEGIN my-first-expo-app api proxies/ { skip = 1; next }
       /# END my-first-expo-app api proxies/ { skip = 0; next }
       skip { next }
-      /^[[:space:]]*location \/ \{/ && !inserted {
+      { print }
+    ' "$conf" >"$stripped"
+
+    if grep -Eq '^[[:space:]]*location[[:space:]]*=[[:space:]]*/api/agent[[:space:]]*\{' "$stripped"; then
+      has_agent=1
+    else
+      has_agent=0
+    fi
+    if grep -Eq '^[[:space:]]*location[[:space:]]+/api/[[:space:]]*\{' "$stripped"; then
+      has_api=1
+    else
+      has_api=0
+    fi
+    if grep -Eq '^[[:space:]]*location[[:space:]]+/voice/[[:space:]]*\{' "$stripped"; then
+      has_voice=1
+    else
+      has_voice=0
+    fi
+    if grep -Eq '^[[:space:]]*location[[:space:]]*=[[:space:]]*/healthz[[:space:]]*\{' "$stripped"; then
+      has_health=1
+    else
+      has_health=0
+    fi
+
+    awk \
+      -v backend_port="$BACKEND_PORT" \
+      -v email_port="$EMAIL_AGENT_PORT" \
+      -v has_agent="$has_agent" \
+      -v has_api="$has_api" \
+      -v has_voice="$has_voice" \
+      -v has_health="$has_health" '
+      BEGIN {
+        block = ""
+        if (has_agent != 1) {
+          block = block \
+                  "  location = /api/agent {\n" \
+                  "    proxy_pass http://127.0.0.1:" email_port "/api/agent;\n" \
+                  "    proxy_http_version 1.1;\n" \
+                  "    proxy_set_header Host $host;\n" \
+                  "    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n" \
+                  "    proxy_set_header X-Forwarded-Proto $scheme;\n" \
+                  "    proxy_read_timeout 300s;\n" \
+                  "    proxy_send_timeout 300s;\n" \
+                  "  }\n\n"
+        }
+        if (has_api != 1) {
+          block = block \
+                  "  location /api/ {\n" \
+                  "    proxy_pass http://127.0.0.1:" backend_port "/api/;\n" \
+                  "    proxy_http_version 1.1;\n" \
+                  "    proxy_set_header Host $host;\n" \
+                  "    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n" \
+                  "    proxy_set_header X-Forwarded-Proto $scheme;\n" \
+                  "    proxy_read_timeout 300s;\n" \
+                  "    proxy_send_timeout 300s;\n" \
+                  "  }\n\n"
+        }
+        if (has_voice != 1) {
+          block = block \
+                  "  location /voice/ {\n" \
+                  "    proxy_pass http://127.0.0.1:" backend_port "/voice/;\n" \
+                  "    proxy_http_version 1.1;\n" \
+                  "    proxy_set_header Host $host;\n" \
+                  "    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n" \
+                  "    proxy_set_header X-Forwarded-Proto $scheme;\n" \
+                  "  }\n\n"
+        }
+        if (has_health != 1) {
+          block = block \
+                  "  location = /healthz {\n" \
+                  "    proxy_pass http://127.0.0.1:" backend_port "/healthz;\n" \
+                  "    proxy_http_version 1.1;\n" \
+                  "    proxy_set_header Host $host;\n" \
+                  "    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n" \
+                  "    proxy_set_header X-Forwarded-Proto $scheme;\n" \
+                  "  }\n\n"
+        }
+        if (block != "") {
+          block = "  # BEGIN my-first-expo-app api proxies\n" block "  # END my-first-expo-app api proxies\n"
+        }
+      }
+      /^[[:space:]]*location \/ \{/ && !inserted && block != "" {
         print block
         inserted = 1
       }
       { print }
       END {
-        if (!inserted) {
+        if (!inserted && block != "") {
           print block
         }
       }
-    ' "$conf" >"$tmp"
+    ' "$stripped" >"$tmp"
     cat "$tmp" >"$conf"
-    rm -f "$tmp"
+    rm -f "$tmp" "$stripped"
     configured=true
     log "Configured API proxies in $conf"
   done
