@@ -5,6 +5,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { SmartTranslationToolScreen } from '@/features/tools/smart-translation-screen';
 import { TextToSpeechToolScreen } from '@/features/tools/tts-tool-screen';
 import { LiveStreamCaptureScreen } from '@/features/tools/live-stream-capture-screen';
+import { ReleaseEmailAssistantScreen } from '@/features/tools/release-email-assistant-screen';
 import { ThemedText } from '@/components/themed-text';
 import { getToolById } from '@/mocks/app-data';
 import { useAppTheme } from '@/hooks/use-app-theme';
@@ -24,6 +25,15 @@ export function ToolDetailScreen() {
       <>
         <Stack.Screen options={{ headerShown: false }} />
         <TextToSpeechToolScreen />
+      </>
+    );
+  }
+
+  if (tool?.id === 'release-email-assistant') {
+    return (
+      <>
+        <Stack.Screen options={{ headerShown: false }} />
+        <ReleaseEmailAssistantScreen />
       </>
     );
   }

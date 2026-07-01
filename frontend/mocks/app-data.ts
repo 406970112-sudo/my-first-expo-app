@@ -17,6 +17,20 @@ export const featuredBanner = {
 
 export const appTools: AppTool[] = [
   {
+    id: 'release-email-assistant',
+    name: '发版邮件助手',
+    tagline: '生成发版通知邮件',
+    description: '根据发版时间、功能清单和收件人信息，生成可复制的发版通知邮件正文和收件人列表。',
+    icon: 'email-newsletter',
+    category: 'AI',
+    route: '/tools/release-email-assistant',
+    accentColor: '#8b5cf6',
+    badges: ['发版', '邮件'],
+    usageLabel: '生成邮件',
+    status: 'available',
+    featured: true,
+  },
+  {
     id: 'live-stream-capture',
     name: '音视频推流',
     tagline: 'LiveKit 本地采集',

@@ -9,6 +9,9 @@
     "frontend:web": "npm --prefix frontend run web",
     "frontend:android": "npm --prefix frontend run android",
     "frontend:ios": "npm --prefix frontend run ios",
-    "frontend:lint": "npm --prefix frontend run lint"
+    "frontend:lint": "npm --prefix frontend run lint",
+    "email-agent:dev": "npm --prefix email-agent-backend run dev",
+    "email-agent:build": "npm --prefix email-agent-backend run build",
+    "email-agent:start": "npm --prefix email-agent-backend run start"
   }
 }

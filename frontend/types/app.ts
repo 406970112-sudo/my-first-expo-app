@@ -5,6 +5,7 @@ export type AppIconName = ComponentProps<typeof MaterialCommunityIcons>['name'];
 
 export type ToolId =
   | 'text-to-speech'
+  | 'release-email-assistant'
   | 'live-stream-capture'
   | 'image-cleanup'
   | 'smart-translation'

@@ -51,7 +51,7 @@ const PERMISSION_TIMEOUT_MS = 15_000;
 function installLegacyGetUserMediaAdapter() {
   const legacyNavigator = navigator as LegacyNavigator;
 
-  if (legacyNavigator.mediaDevices?.getUserMedia) return 'standard' as const;
+  if (typeof legacyNavigator.mediaDevices?.getUserMedia === 'function') return 'standard' as const;
 
   const legacyGetUserMedia =
     legacyNavigator.getUserMedia ??
