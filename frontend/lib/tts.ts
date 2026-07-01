@@ -6,7 +6,25 @@ const DEV_SERVER_URL =
   Platform.OS === 'android' ? 'http://10.0.2.2:3000' : 'http://127.0.0.1:3000';
 const CONFIGURED_SERVER_URL = process.env.EXPO_PUBLIC_VOICE_SERVER_URL?.trim();
 
+function getProductionWebOrigin() {
+  if (Platform.OS !== 'web' || typeof window === 'undefined') {
+    return '';
+  }
+
+  const { hostname, origin } = window.location;
+  if (!origin || hostname === 'localhost' || hostname === '127.0.0.1') {
+    return '';
+  }
+
+  return origin;
+}
+
 export function getVoiceServerUrl() {
+  const productionWebOrigin = getProductionWebOrigin();
+  if (productionWebOrigin) {
+    return productionWebOrigin;
+  }
+
   return CONFIGURED_SERVER_URL || DEV_SERVER_URL;
 }
 
