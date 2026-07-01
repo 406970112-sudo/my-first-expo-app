@@ -234,6 +234,7 @@ mkdir -p "$BACKUP_DIR"
 DEPLOY_STARTED=true
 
 log "Publishing frontend and backend"
+mkdir -p "$BACKEND_ROOT/bin"
 install -m 755 "$BUILD_API" "$BACKEND_ROOT/bin/api"
 mkdir -p "$WEB_ROOT"
 rsync -a --delete "$FRONTEND_ROOT/dist/" "$WEB_ROOT/"
