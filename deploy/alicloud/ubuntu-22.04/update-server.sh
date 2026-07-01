@@ -217,7 +217,7 @@ log "Building backend"
 export PATH="/usr/local/go/bin:$PATH"
 export GOPROXY
 pushd "$BACKEND_ROOT" >/dev/null
-go build -o "$BUILD_API" ./cmd/api
+go build -buildvcs=false -o "$BUILD_API" ./cmd/api
 popd >/dev/null
 
 log "Building email agent"
