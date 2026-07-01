@@ -300,7 +300,11 @@ systemctl is-active --quiet "$BACKEND_SERVICE"
 systemctl is-active --quiet "$EMAIL_AGENT_SERVICE"
 systemctl is-active --quiet nginx
 curl --fail --silent --show-error http://127.0.0.1:3000/healthz
-curl --fail --silent --show-error http://127.0.0.1:${EMAIL_AGENT_PORT}/api/
+if ! retry 10 2 curl --fail --silent --show-error "http://127.0.0.1:${EMAIL_AGENT_PORT}/api/"; then
+  systemctl status --no-pager "$EMAIL_AGENT_SERVICE" || true
+  journalctl -u "$EMAIL_AGENT_SERVICE" -n 80 --no-pager || true
+  exit 1
+fi
 curl --fail --silent --show-error -X OPTIONS http://127.0.0.1/api/agent >/dev/null
 curl --fail --silent --show-error http://127.0.0.1/api/v1/system/ping
 curl --fail --silent --show-error --head http://127.0.0.1/tools/live-stream-capture >/dev/null
